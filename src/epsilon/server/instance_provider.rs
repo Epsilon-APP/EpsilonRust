@@ -2,11 +2,15 @@ use crate::k8s::label::Label;
 use crate::{EResult, Kube};
 use std::collections::HashMap;
 
-use crate::epsilon::server::instance::Instance;
+use crate::epsilon::server::instance::{Instance, InstanceJson};
 use crate::epsilon::server::instance_type::InstanceType;
+use crate::epsilon::server::state::EpsilonState;
 use crate::epsilon::server::template::Template;
 use anyhow::format_err;
+use rocket::State;
+use serde_json::json;
 use std::sync::Arc;
+use tokio::sync::Mutex;
 
 pub struct InstanceProvider {
     kube: Arc<Kube>,
@@ -20,10 +24,9 @@ impl InstanceProvider {
     }
 
     pub async fn start_instance(&self, template_name: &str) -> EResult<Instance> {
-        let template = self.get_template(template_name).await?;
-        let instance_type = template.t.parse()?;
+        let template = &self.get_template(template_name).await?;
 
-        let instance = Instance::new(&self.kube, template_name, &instance_type).await?;
+        let instance = Instance::new(&self.kube, template).await?;
 
         info!(
             "An instance [{}] has been created (template={}, type={})",
@@ -45,6 +48,7 @@ impl InstanceProvider {
         &self,
         instance_type: &InstanceType,
         template_option: Option<&str>,
+        state: Option<&EpsilonState>,
     ) -> EResult<Vec<Instance>> {
         let mut labels = vec![Label::get_instance_type_label(instance_type)];
 
@@ -54,20 +58,29 @@ impl InstanceProvider {
 
         let pods = self.kube.get_pods(Some(&labels), None).await?;
 
-        Ok(pods.into_iter().map(Instance::from_pod).collect())
+        let map = pods.into_iter().map(Instance::from_pod);
+
+        match state {
+            Some(_) => Ok(map
+                .filter(|instance| instance.get_state().eq(state.unwrap()))
+                .collect()),
+
+            None => Ok(map.collect()),
+        }
     }
 
-    pub async fn get_ready_instances(
-        &self,
-        instance_type: &InstanceType,
-        template_option: Option<&str>,
-    ) -> EResult<Vec<Instance>> {
-        let instances = self.get_instances(instance_type, template_option).await?;
+    pub async fn enable_in_game_instance(&self, name: &str) -> EResult<()> {
+        let label = &Label::get_in_game_label();
 
-        Ok(instances
-            .into_iter()
-            .filter(|instance| instance.is_ready())
-            .collect())
+        let patch = json!({
+            "metadata": {
+                "labels": {
+                    label.get_key(): label.get_value()
+                }
+            }
+        });
+
+        Ok(self.kube.patch_pod(name, &patch).await?)
     }
 
     pub async fn get_template_host(&self, route: &str) -> String {
@@ -122,4 +135,68 @@ impl InstanceProvider {
             Err(format_err!("Failed to fetch template list from {}", url))
         }
     }
+}
+
+#[rocket::post("/create/<template_name>")]
+pub async fn create(template_name: &str, instance_provider: &State<Arc<InstanceProvider>>) {
+    instance_provider
+        .start_instance(template_name)
+        .await
+        .unwrap();
+
+    info!("An instance has been created (template={})", template_name);
+}
+
+#[rocket::post("/close/<instance_name>")]
+pub async fn close(instance_name: &str, instance_provider: &State<Arc<InstanceProvider>>) {
+    instance_provider
+        .remove_instance(instance_name)
+        .await
+        .unwrap();
+
+    info!("An instance has been removed (name={})", instance_name);
+}
+
+#[rocket::post("/in_game/<instance>")]
+pub async fn in_game(instance: &str, instance_provider: &State<Arc<InstanceProvider>>) {
+    instance_provider
+        .enable_in_game_instance(instance)
+        .await
+        .unwrap();
+
+    info!("An instance is now in game (name={})", instance);
+}
+
+#[rocket::get("/get/<template_name>")]
+pub async fn get(template_name: &str, instance_provider: &State<Arc<InstanceProvider>>) -> String {
+    let instances = instance_provider
+        .get_instances(&InstanceType::Server, Some(template_name), None)
+        .await
+        .unwrap()
+        .into_iter();
+
+    let json_array: Vec<InstanceJson> = Vec::with_capacity(instances.len());
+
+    for instance in instances {
+        instance.to_json().await;
+    }
+
+    json!({ "instances": json_array }).to_string()
+}
+
+#[rocket::get("/get_all")]
+pub async fn get_all(instance_provider: &State<Arc<InstanceProvider>>) -> String {
+    let instances = instance_provider
+        .get_instances(&InstanceType::Server, None, None)
+        .await
+        .unwrap()
+        .into_iter();
+
+    let json_array: Vec<InstanceJson> = Vec::with_capacity(instances.len());
+
+    for instance in instances {
+        instance.to_json().await;
+    }
+
+    json!({ "instances": json_array }).to_string()
 }

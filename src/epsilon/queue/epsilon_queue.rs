@@ -1,10 +1,11 @@
 use crate::epsilon::queue::queue_provider::Group;
 use crate::epsilon::server::template::Template;
-use std::collections::VecDeque;
+use std::collections::{HashSet, VecDeque};
 
 pub struct Queue {
     template: Template,
     queue: VecDeque<Group>,
+    in_queue: HashSet<String>,
 }
 
 impl Queue {
@@ -12,6 +13,7 @@ impl Queue {
         Self {
             template,
             queue: VecDeque::new(),
+            in_queue: HashSet::new(),
         }
     }
 
@@ -20,6 +22,15 @@ impl Queue {
     }
 
     pub fn push(&mut self, group: Group) {
+        for player in &group.players {
+            if self.in_queue.contains(player) {
+                self.queue
+                    .retain(|queue_group| !queue_group.players.contains(player));
+            }
+
+            self.in_queue.insert(player.into());
+        }
+
         self.queue.push_back(group);
     }
 

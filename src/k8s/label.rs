@@ -38,17 +38,19 @@ impl Label {
     }
 
     pub fn get_instance_type_label(instance_type: &InstanceType) -> Label {
-        Label::new(
-            "epsilon.fr/instance",
-            &instance_type.to_string().to_uppercase(),
-        )
+        Label::new("epsilon.fr/instance", &instance_type.to_string())
     }
 
     pub fn get_template_label(template_name: &str) -> Label {
-        Label::new(
-            "epsilon.fr/template",
-            &template_name.to_uppercase().to_uppercase(),
-        )
+        Label::new("epsilon.fr/template", template_name)
+    }
+
+    pub fn get_slots_label(slots: i32) -> Label {
+        Label::new("epsilon.fr/slots", slots.to_string().as_str())
+    }
+
+    pub fn get_in_game_label() -> Label {
+        Label::new("epsilon.fr/in-game", "true")
     }
 }
 

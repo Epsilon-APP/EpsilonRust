@@ -16,7 +16,6 @@ use k8s_openapi::chrono::Local;
 use log::{Level, LevelFilter};
 use std::io::Write;
 use std::sync::Arc;
-use std::time::Duration;
 
 mod epsilon;
 mod tasks;
@@ -91,11 +90,11 @@ async fn main() -> EResult<()> {
         )
         .ignite_task(
             HubTask::init(&epsilon_api, &instance_provider, &queue_provider).await?,
-            9000,
+            2000,
         )
         .ignite_task(
             QueueTask::init(&epsilon_api, &instance_provider, &queue_provider).await?,
-            4000,
+            2000,
         );
 
     info!("Tasks have been started");
@@ -107,6 +106,26 @@ async fn main() -> EResult<()> {
         .manage(Arc::clone(&instance_provider))
         .manage(Arc::clone(&queue_provider))
         .mount("/api", rocket::routes![epsilon::api::epsilon_api::events])
+        .mount(
+            "/instance",
+            rocket::routes![epsilon::server::instance_provider::create],
+        )
+        .mount(
+            "/instance",
+            rocket::routes![epsilon::server::instance_provider::close],
+        )
+        .mount(
+            "/instance",
+            rocket::routes![epsilon::server::instance_provider::in_game],
+        )
+        .mount(
+            "/instance",
+            rocket::routes![epsilon::server::instance_provider::get],
+        )
+        .mount(
+            "/instance",
+            rocket::routes![epsilon::server::instance_provider::get_all],
+        )
         .mount(
             "/queue",
             rocket::routes![epsilon::queue::queue_provider::push],

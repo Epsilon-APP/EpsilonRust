@@ -7,7 +7,7 @@ use std::sync::Arc;
 use k8s_openapi::serde_json;
 use k8s_openapi::serde_json::{json, Value};
 
-use kube::api::{DeleteParams, ListParams, PostParams};
+use kube::api::{DeleteParams, ListParams, Patch, PatchParams, PostParams};
 use kube::{Api, Client, Error};
 
 pub struct Kube {
@@ -128,6 +128,16 @@ impl Kube {
         let pods = self.pods.list(&parameters).await?;
 
         Ok(pods.items)
+    }
+
+    pub async fn patch_pod(&self, name: &str, patch: &Value) -> Result<(), Error> {
+        let parameters = PatchParams::default();
+
+        self.pods
+            .patch(name, &parameters, &Patch::Strategic(&patch))
+            .await?;
+
+        Ok(())
     }
 
     pub fn get_namespace(&self) -> &str {

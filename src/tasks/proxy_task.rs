@@ -1,5 +1,6 @@
 use crate::epsilon::queue::queue_provider::QueueProvider;
 use crate::epsilon::server::instance_type::InstanceType;
+use crate::epsilon::server::state::EpsilonState;
 use crate::epsilon::server::template::Template;
 use crate::{EResult, EpsilonApi, InstanceProvider, Task};
 use async_trait::async_trait;
@@ -29,7 +30,7 @@ impl Task for ProxyTask {
 
         let proxies = self
             .instance_provider
-            .get_instances(&InstanceType::Proxy, None)
+            .get_instances(&InstanceType::Proxy, None, None)
             .await?;
 
         let number = proxies.len();
@@ -41,7 +42,7 @@ impl Task for ProxyTask {
         if number > 1 {
             let proxy = proxies.first().unwrap();
 
-            if proxy.is_ready() {
+            if proxy.get_state().eq(&EpsilonState::Running) {
                 let name = proxy.get_name();
 
                 self.instance_provider.remove_instance(name).await?;

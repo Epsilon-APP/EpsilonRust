@@ -6,6 +6,7 @@ use crate::epsilon::api::epsilon_api::EpsilonApi;
 use crate::epsilon::api::epsilon_events::EpsilonEvent::SendToServer;
 use crate::epsilon::queue::queue_provider::QueueProvider;
 use crate::epsilon::server::instance_type::InstanceType;
+use crate::epsilon::server::state::EpsilonState;
 use crate::{EResult, InstanceProvider, Task};
 
 pub struct QueueTask {
@@ -30,33 +31,47 @@ impl Task for QueueTask {
 
     async fn run(&mut self) -> EResult<()> {
         for (template_name, queue) in self.queue_provider.lock().await.get_queues() {
-            let template = queue.get_template();
-
             if !queue.is_empty() {
-                let instance_starting = self
+                let template = queue.get_template();
+
+                let instances_starting = self
                     .instance_provider
-                    .get_instances(&InstanceType::Server, Some(template_name))
+                    .get_instances(&InstanceType::Server, Some(template_name), None)
                     .await?;
 
-                let instance_ready = self
+                let instances_ready = self
                     .instance_provider
-                    .get_ready_instances(&InstanceType::Server, Some(template_name))
+                    .get_instances(
+                        &InstanceType::Server,
+                        Some(template_name),
+                        Some(&EpsilonState::Running),
+                    )
                     .await?;
 
-                if instance_starting.is_empty() && instance_ready.is_empty() {
+                if instances_starting.is_empty() && instances_ready.is_empty() {
                     self.instance_provider.start_instance(template_name).await?;
                 }
 
-                if !instance_ready.is_empty() {
-                    let instance = instance_ready.first().unwrap();
-                    let mut available_slots =
-                        template.slots as u32 - instance.get_info().await?.players.online;
+                if !instances_ready.is_empty() {
+                    let instance = instances_ready.first().unwrap();
+                    let info_result = instance.get_info().await;
 
-                    while !queue.is_empty() && available_slots != 0 {
-                        if let Some(group) = queue.pop() {
-                            available_slots -= 1;
-                            self.epsilon_api
-                                .send(SendToServer(group, String::from(instance.get_name())))
+                    if let Ok(info) = info_result {
+                        let mut available_slots = template.slots as u32 - info.players.online;
+
+                        while !queue.is_empty() && available_slots != 0 {
+                            if let Some(group) = queue.pop() {
+                                let group_size = group.players.len() as u32;
+
+                                if group_size <= available_slots {
+                                    available_slots -= group_size;
+
+                                    self.epsilon_api.send(SendToServer(
+                                        group,
+                                        String::from(instance.get_name()),
+                                    ));
+                                }
+                            }
                         }
                     }
                 }

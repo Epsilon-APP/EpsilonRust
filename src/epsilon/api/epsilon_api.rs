@@ -38,14 +38,16 @@ pub async fn events(epsilon_api: &State<Arc<EpsilonApi>>, mut end: Shutdown) -> 
                 _ = &mut end => break,
             };
 
-            match event {
+            match &event {
                 EpsilonEvent::SendToServer(group, server) => {
+                    info!("Send to server {:?} [{}]", group, server);
+
                     let json = json!({
                         "group": group,
                         "server": server,
                     });
 
-                    yield Event::data(json.to_string()).event("send_to");
+                    yield Event::data(json.to_string()).event(event.to_string());
                 }
             }
         }
