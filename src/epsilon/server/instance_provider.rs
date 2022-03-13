@@ -88,6 +88,8 @@ impl InstanceProvider {
 
         let pods_result = self.kube.get_pods(Some(&labels), None).await;
 
+        pods_result.as_ref().unwrap();
+
         if let Ok(pods) = pods_result {
             let pod = pods.first();
 
@@ -175,10 +177,10 @@ pub async fn get(template_name: &str, instance_provider: &State<Arc<InstanceProv
         .unwrap()
         .into_iter();
 
-    let json_array: Vec<InstanceJson> = Vec::with_capacity(instances.len());
+    let mut json_array: Vec<InstanceJson> = Vec::with_capacity(instances.len());
 
     for instance in instances {
-        instance.to_json().await;
+        json_array.push(instance.to_json().await);
     }
 
     json!({ "instances": json_array }).to_string()
@@ -192,10 +194,10 @@ pub async fn get_all(instance_provider: &State<Arc<InstanceProvider>>) -> String
         .unwrap()
         .into_iter();
 
-    let json_array: Vec<InstanceJson> = Vec::with_capacity(instances.len());
+    let mut json_array: Vec<InstanceJson> = Vec::with_capacity(instances.len());
 
     for instance in instances {
-        instance.to_json().await;
+        json_array.push(instance.to_json().await);
     }
 
     json!({ "instances": json_array }).to_string()
