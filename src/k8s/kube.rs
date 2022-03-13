@@ -70,7 +70,7 @@ impl Kube {
                 "restartPolicy": "Never",
                 "containers": [{
                     "name": "main",
-                    "image": format!("{}/{}", "127.0.0.1:5000", template),
+                    "image": format!("{}/{}", "45.155.169.234:30000", template),
                     "imagePullPolicy": "Always",
                     "ports": [
                         {
