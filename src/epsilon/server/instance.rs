@@ -8,6 +8,7 @@ use async_minecraft_ping::ServerDescription::Plain;
 use async_minecraft_ping::{ConnectionConfig, ServerPlayers, ServerVersion, StatusResponse};
 use k8s_openapi::api::core::v1::Pod;
 use std::sync::Arc;
+use std::time::Duration;
 
 use crate::epsilon::server::state::EpsilonState;
 use crate::epsilon::server::template::Template;
@@ -100,7 +101,8 @@ impl Instance {
         let address_option = status.pod_ip.as_ref();
 
         if let Some(address) = address_option {
-            let config = ConnectionConfig::build(address);
+            let timeout = Duration::from_millis(500);
+            let config = ConnectionConfig::build(address).with_timeout(timeout);
 
             match config.connect().await {
                 Ok(connection) => Ok(connection.status().await?.status),
@@ -168,12 +170,17 @@ impl Instance {
     }
 
     pub async fn to_json(&self) -> InstanceJson {
+        let info_result = self.get_info().await;
+
         InstanceJson {
             name: self.get_name().to_string(),
             template: self.get_template_name().to_string(),
             state: self.get_state(),
             slots: self.get_instance_slots(),
-            online_count: self.get_info().await.unwrap().players.online,
+            online_count: match info_result {
+                Ok(info) => info.players.online,
+                Err(_) => 0,
+            },
         }
     }
 }
