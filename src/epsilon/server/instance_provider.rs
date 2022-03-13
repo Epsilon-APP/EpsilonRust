@@ -10,7 +10,6 @@ use anyhow::format_err;
 use rocket::State;
 use serde_json::json;
 use std::sync::Arc;
-use tokio::sync::Mutex;
 
 pub struct InstanceProvider {
     kube: Arc<Kube>,

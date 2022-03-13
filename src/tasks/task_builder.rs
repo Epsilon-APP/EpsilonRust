@@ -6,7 +6,7 @@ use std::time::Duration;
 pub struct TaskBuilder {}
 
 impl TaskBuilder {
-    pub fn new(instance_provider: &Arc<InstanceProvider>) -> Self {
+    pub fn new() -> Self {
         Self {}
     }
 

@@ -84,7 +84,7 @@ async fn main() -> EResult<()> {
 
     info!("Instance provider has been started");
 
-    TaskBuilder::new(&instance_provider)
+    TaskBuilder::new()
         .ignite_task(
             ProxyTask::init(&epsilon_api, &instance_provider, &queue_provider).await?,
             6000,

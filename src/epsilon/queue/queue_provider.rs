@@ -1,4 +1,3 @@
-use crate::epsilon::api::epsilon_events::EpsilonEvent;
 use crate::epsilon::queue::epsilon_queue::Queue;
 use crate::{EResult, InstanceProvider};
 use rocket::serde::json::Json;
