@@ -123,6 +123,12 @@ impl Instance {
         }
     }
 
+    pub fn need_close(&self) -> bool {
+        let phase = self.pod.status.as_ref().unwrap().phase.as_ref().unwrap();
+
+        phase == "Succeeded" || phase == "Failed" || phase == "Unknown"
+    }
+
     pub fn get_state(&self) -> EpsilonState {
         let status = self.pod.status.as_ref().unwrap();
 
@@ -139,7 +145,7 @@ impl Instance {
         let label = &labels.get("epsilon.fr/in-game");
         let is_in_game = label.is_some() && label.unwrap() == "true";
 
-        let is_stopping = metadata.deletion_timestamp.is_some();
+        let is_stopping = metadata.deletion_timestamp.is_some() || self.need_close();
 
         if is_ready && is_in_game {
             EpsilonState::InGame
