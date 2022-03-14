@@ -23,6 +23,11 @@ impl EpsilonApi {
     }
 }
 
+#[rocket::post("/ping")]
+pub async fn ping() -> &'static str {
+    "Pong"
+}
+
 #[rocket::get("/events")]
 pub async fn events(epsilon_api: &State<Arc<EpsilonApi>>, mut end: Shutdown) -> EventStream![] {
     let mut rx = epsilon_api.channel.subscribe();

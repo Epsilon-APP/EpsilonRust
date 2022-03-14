@@ -112,30 +112,21 @@ async fn main() -> EResult<()> {
         .manage(Arc::clone(&epsilon_api))
         .manage(Arc::clone(&instance_provider))
         .manage(Arc::clone(&queue_provider))
+        .mount("/", rocket::routes![epsilon::api::epsilon_api::ping])
         .mount("/api", rocket::routes![epsilon::api::epsilon_api::events])
-        .mount(
-            "/instance",
-            rocket::routes![epsilon::server::instance_provider::create],
-        )
-        .mount(
-            "/instance",
-            rocket::routes![epsilon::server::instance_provider::close],
-        )
-        .mount(
-            "/instance",
-            rocket::routes![epsilon::server::instance_provider::in_game],
-        )
-        .mount(
-            "/instance",
-            rocket::routes![epsilon::server::instance_provider::get],
-        )
-        .mount(
-            "/instance",
-            rocket::routes![epsilon::server::instance_provider::get_all],
-        )
         .mount(
             "/queue",
             rocket::routes![epsilon::queue::queue_provider::push],
+        )
+        .mount(
+            "/instance",
+            rocket::routes![
+                epsilon::server::instance_provider::create,
+                epsilon::server::instance_provider::close,
+                epsilon::server::instance_provider::in_game,
+                epsilon::server::instance_provider::get,
+                epsilon::server::instance_provider::get_all
+            ],
         )
         .launch()
         .await?;
