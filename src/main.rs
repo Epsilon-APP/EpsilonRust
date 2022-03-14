@@ -30,6 +30,8 @@ async fn main() -> EResult<()> {
         "EpsilonRust=info, EpsilonRust=error, EpsilonRust=debug",
     );
 
+    std::env::set_var("RUST_BACKTRACE", "1");
+
     env_logger::Builder::new()
         .format(|buf, record| {
             let mut style = buf.style();
