@@ -25,18 +25,20 @@ impl Task for CleanTask {
         let servers = self
             .instance_provider
             .get_instances(&InstanceType::Server, None, None)
-            .await?;
+            .await
+            .unwrap();
 
         let proxies = self
             .instance_provider
             .get_instances(&InstanceType::Proxy, None, None)
-            .await?;
+            .await
+            .unwrap();
 
         for instance in servers {
             if instance.need_close() {
                 let name = instance.get_name();
 
-                self.instance_provider.remove_instance(name).await?;
+                self.instance_provider.remove_instance(name).await.unwrap();
             }
         }
 
@@ -44,7 +46,7 @@ impl Task for CleanTask {
             if instance.need_close() {
                 let name = instance.get_name();
 
-                self.instance_provider.remove_instance(name).await?;
+                self.instance_provider.remove_instance(name).await.unwrap();
             }
         }
 

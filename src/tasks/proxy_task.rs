@@ -31,12 +31,16 @@ impl Task for ProxyTask {
         let proxies = self
             .instance_provider
             .get_instances(&InstanceType::Proxy, None, None)
-            .await?;
+            .await
+            .unwrap();
 
         let number = proxies.len();
 
         if proxies.is_empty() {
-            self.instance_provider.start_instance(template_name).await?;
+            self.instance_provider
+                .start_instance(template_name)
+                .await
+                .unwrap();
         }
 
         if number > 1 {
@@ -45,7 +49,7 @@ impl Task for ProxyTask {
             if proxy.get_state().eq(&EpsilonState::Running) {
                 let name = proxy.get_name();
 
-                self.instance_provider.remove_instance(name).await?;
+                self.instance_provider.remove_instance(name).await.unwrap();
             }
         }
 

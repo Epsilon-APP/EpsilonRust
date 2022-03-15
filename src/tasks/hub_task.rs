@@ -32,7 +32,8 @@ impl Task for HubTask {
         let proxies = self
             .instance_provider
             .get_instances(&InstanceType::Proxy, None, Some(&EpsilonState::Running))
-            .await?;
+            .await
+            .unwrap();
 
         let proxy_number = proxies.len();
 
@@ -40,7 +41,8 @@ impl Task for HubTask {
             let hubs = self
                 .instance_provider
                 .get_instances(&InstanceType::Server, Some(template_name), None)
-                .await?;
+                .await
+                .unwrap();
 
             let hub_online_count_result = hubs.get_online_count().await;
 
@@ -51,7 +53,10 @@ impl Task for HubTask {
                     ((hub_online_count as f32 * 1.6 / self.hub_template.slots as f32) + 1.0) as u32;
 
                 if hub_number < hub_necessary {
-                    self.instance_provider.start_instance(template_name).await?;
+                    self.instance_provider
+                        .start_instance(template_name)
+                        .await
+                        .unwrap();
                 }
 
                 if hub_number > hub_necessary {
@@ -75,7 +80,7 @@ impl Task for HubTask {
                     if let Some(hub) = hub_option {
                         let name = hub.get_name();
 
-                        self.instance_provider.remove_instance(name).await?;
+                        self.instance_provider.remove_instance(name).await.unwrap();
 
                         info!("Hub {} is removed with {} online players", name, n);
                     }

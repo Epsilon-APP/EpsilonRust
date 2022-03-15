@@ -37,7 +37,8 @@ impl Task for QueueTask {
                 let instances_starting = self
                     .instance_provider
                     .get_instances(&InstanceType::Server, Some(template_name), None)
-                    .await?;
+                    .await
+                    .unwrap();
 
                 let instances_ready = self
                     .instance_provider
@@ -46,10 +47,14 @@ impl Task for QueueTask {
                         Some(template_name),
                         Some(&EpsilonState::Running),
                     )
-                    .await?;
+                    .await
+                    .unwrap();
 
                 if instances_starting.is_empty() && instances_ready.is_empty() {
-                    self.instance_provider.start_instance(template_name).await?;
+                    self.instance_provider
+                        .start_instance(template_name)
+                        .await
+                        .unwrap();
                 }
 
                 if !instances_ready.is_empty() {
