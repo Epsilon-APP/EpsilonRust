@@ -154,8 +154,6 @@ pub async fn close(instance_name: &str, instance_provider: &State<Arc<InstancePr
         .remove_instance(instance_name)
         .await
         .unwrap();
-
-    info!("An instance has been removed (name={})", instance_name);
 }
 
 #[rocket::post("/in_game/<instance>")]
