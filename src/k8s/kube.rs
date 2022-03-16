@@ -87,12 +87,6 @@ impl Kube {
                             "command": ["cat", "epsilon_start"]
                         }
                     },
-                    "resources": {
-                        "limits": {
-                            "cpu": "4",
-                            "memory": "1500Mi"
-                        }
-                    },
                 }],
             }
         }))
