@@ -82,11 +82,17 @@ impl Kube {
                         "initialDelaySeconds": 5,
                         "periodSeconds": 1,
                         "successThreshold": 1,
-                        "failureThreshold": 60,
+                        "failureThreshold": 3,
                         "exec": {
                             "command": ["cat", "epsilon_start"]
                         }
-                    }
+                    },
+                    "resources": {
+                        "limit": {
+                            "cpu": "4",
+                            "memory": "1500Mi"
+                        }
+                    },
                 }],
             }
         }))
