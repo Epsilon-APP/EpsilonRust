@@ -88,7 +88,7 @@ impl Kube {
                         }
                     },
                     "resources": {
-                        "limit": {
+                        "limits": {
                             "cpu": "4",
                             "memory": "1500Mi"
                         }
