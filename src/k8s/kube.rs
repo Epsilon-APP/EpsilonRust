@@ -82,7 +82,7 @@ impl Kube {
                         "initialDelaySeconds": 5,
                         "periodSeconds": 1,
                         "successThreshold": 1,
-                        "failureThreshold": 3,
+                        "failureThreshold": 60,
                         "exec": {
                             "command": ["cat", "epsilon_start"]
                         }
