@@ -54,6 +54,15 @@ pub async fn events(epsilon_api: &State<Arc<EpsilonApi>>, mut end: Shutdown) -> 
 
                     yield Event::data(json.to_string()).event(event.to_string());
                 },
+                EpsilonEvent::ClearServer(server) =>  {
+                    info!("Clear server {}", server);
+
+                    let json = json!({
+                        "server": server,
+                    });
+
+                    yield Event::data(json.to_string()).event(event.to_string());
+                },
                 EpsilonEvent::KeepAlive => {
                     yield Event::data("").event(event.to_string());
                 }
