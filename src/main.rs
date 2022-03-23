@@ -95,10 +95,10 @@ async fn main() -> EResult<()> {
             HubTask::init(&epsilon_api, &instance_provider, &queue_provider).await?,
             2000,
         )
-        // .ignite_task(
-        //     CleanTask::init(&epsilon_api, &instance_provider, &queue_provider).await?,
-        //     1000,
-        // )
+        .ignite_task(
+            CleanTask::init(&epsilon_api, &instance_provider, &queue_provider).await?,
+            1000,
+        )
         .ignite_task(
             QueueTask::init(&epsilon_api, &instance_provider, &queue_provider).await?,
             2000,

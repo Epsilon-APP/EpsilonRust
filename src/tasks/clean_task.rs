@@ -39,6 +39,8 @@ impl Task for CleanTask {
                 let name = instance.get_name();
 
                 self.instance_provider.remove_instance(name).await.unwrap();
+
+                info!("Cleaned server: {}", name);
             }
         }
 
@@ -47,6 +49,8 @@ impl Task for CleanTask {
                 let name = instance.get_name();
 
                 self.instance_provider.remove_instance(name).await.unwrap();
+
+                info!("Clean proxy: {}", name);
             }
         }
 
