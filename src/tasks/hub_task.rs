@@ -52,7 +52,7 @@ impl Task for HubTask {
                 let hub_necessary =
                     ((hub_online_count as f32 * 1.6 / self.hub_template.slots as f32) + 1.0) as u32;
 
-                debug!("Hubs: {} but necessary -> {}", hub_number, hub_necessary);
+                info!("Hubs: {} but necessary -> {}", hub_number, hub_necessary);
 
                 if hub_number < hub_necessary {
                     self.instance_provider
