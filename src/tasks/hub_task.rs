@@ -40,7 +40,7 @@ impl Task for HubTask {
             let hubs = self
                 .instance_provider
                 .get_instances(&InstanceType::Server, Some(template_name), None)
-                .await?
+                .await?;
 
             let hub_online_count_result = hubs.get_online_count().await;
 
@@ -53,9 +53,7 @@ impl Task for HubTask {
                 info!("Hubs: {} but necessary -> {}", hub_number, hub_necessary);
 
                 if hub_number < hub_necessary {
-                    self.instance_provider
-                        .start_instance(template_name)
-                        .await?
+                    self.instance_provider.start_instance(template_name).await?;
                 }
 
                 if hub_number > hub_necessary {
