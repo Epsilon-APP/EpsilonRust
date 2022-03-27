@@ -28,14 +28,12 @@ impl Task for CleanTask {
         let servers = self
             .instance_provider
             .get_instances(&InstanceType::Server, None, None)
-            .await
-            .unwrap();
+            .await?;
 
         let proxies = self
             .instance_provider
             .get_instances(&InstanceType::Proxy, None, None)
-            .await
-            .unwrap();
+            .await?;
 
         for instance in servers {
             if instance.need_close() {
@@ -43,7 +41,7 @@ impl Task for CleanTask {
                 let event = EpsilonEvent::ClearServer(name.to_string());
 
                 self.epsilon_api.send(event);
-                self.instance_provider.remove_instance(name).await.unwrap();
+                self.instance_provider.remove_instance(name).await?;
 
                 info!("Cleaned server: {}", name);
             }
@@ -55,7 +53,7 @@ impl Task for CleanTask {
                 let event = EpsilonEvent::ClearServer(name.to_string());
 
                 self.epsilon_api.send(event);
-                self.instance_provider.remove_instance(name).await.unwrap();
+                self.instance_provider.remove_instance(name).await?;
 
                 info!("Clean proxy: {}", name);
             }
