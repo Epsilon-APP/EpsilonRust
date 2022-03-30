@@ -4,7 +4,6 @@ use crate::epsilon::queue::queue_provider::Group;
 pub enum EpsilonEvent {
     SendToServer(Group, String),
     ClearServer(String),
-    KeepAlive,
 }
 
 impl ToString for EpsilonEvent {
@@ -12,7 +11,6 @@ impl ToString for EpsilonEvent {
         String::from(match self {
             EpsilonEvent::SendToServer(_, _) => "SendToServer",
             EpsilonEvent::ClearServer(_) => "ClearServer",
-            EpsilonEvent::KeepAlive => "KeepAlive",
         })
     }
 }

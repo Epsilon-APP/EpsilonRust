@@ -15,7 +15,7 @@ impl EpsilonApi {
     pub fn new() -> Arc<EpsilonApi> {
         Arc::new(Self {
             channel: channel::<EpsilonEvent>(1024).0,
-        })
+        })²
     }
 
     pub fn send(&self, event: EpsilonEvent) {
@@ -62,9 +62,6 @@ pub async fn events(epsilon_api: &State<Arc<EpsilonApi>>, mut end: Shutdown) -> 
                     });
 
                     yield Event::data(json.to_string()).event(event.to_string());
-                },
-                EpsilonEvent::KeepAlive => {
-                    yield Event::data("").event(event.to_string());
                 }
             }
         }
