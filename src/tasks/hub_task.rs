@@ -50,8 +50,6 @@ impl Task for HubTask {
                 let hub_necessary =
                     ((hub_online_count as f32 * 1.6 / self.hub_template.slots as f32) + 1.0) as u32;
 
-                info!("Hubs: {} but necessary -> {}", hub_number, hub_necessary);
-
                 if hub_number < hub_necessary {
                     self.instance_provider.start_instance(template_name).await?;
                 }
@@ -66,8 +64,7 @@ impl Task for HubTask {
                         if let Ok(info) = info_result {
                             let online_player = info.players.online;
 
-                            if instance.get_state().eq(&EpsilonState::Running) && online_player < n
-                            {
+                            if instance.get_state() == EpsilonState::Running && online_player < n {
                                 n = online_player;
                                 hub_option = Some(instance);
                             }
