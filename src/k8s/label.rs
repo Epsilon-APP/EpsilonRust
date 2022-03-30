@@ -7,6 +7,11 @@ pub struct Label {
 }
 
 impl Label {
+    pub const INSTANCE_TYPE_LABEL: &'static str = "epsilon.fr/instance";
+    pub const TEMPLATE_LABEL: &'static str = "epsilon.fr/template";
+    pub const SLOTS_LABEL: &'static str = "epsilon.fr/slots";
+    pub const IN_GAME_LABEL: &'static str = "epsilon.fr/in-game";
+
     pub fn new(key: &str, value: &str) -> Self {
         Self {
             key: String::from(key),
@@ -38,19 +43,21 @@ impl Label {
     }
 
     pub fn get_instance_type_label(instance_type: &InstanceType) -> Label {
-        Label::new("epsilon.fr/instance", &instance_type.to_string())
+        Label::new(Label::INSTANCE_TYPE_LABEL, &instance_type.to_string())
     }
 
     pub fn get_template_label(template_name: &str) -> Label {
-        Label::new("epsilon.fr/template", template_name)
+        Label::new(Label::TEMPLATE_LABEL, template_name)
     }
 
     pub fn get_slots_label(slots: i32) -> Label {
-        Label::new("epsilon.fr/slots", slots.to_string().as_str())
+        Label::new(Label::SLOTS_LABEL, slots.to_string().as_str())
     }
 
-    pub fn get_in_game_label() -> Label {
-        Label::new("epsilon.fr/in-game", "true")
+    pub fn get_in_game_label(enable: bool) -> Label {
+        let str = if enable { "true" } else { "false" };
+
+        Label::new(Label::IN_GAME_LABEL, str)
     }
 }
 
