@@ -68,8 +68,8 @@ impl InstanceProvider {
         }
     }
 
-    pub async fn enable_in_game_instance(&self, name: &str) -> EResult<()> {
-        let label = &Label::get_in_game_label();
+    pub async fn set_in_game_instance(&self, name: &str, enable: bool) -> EResult<()> {
+        let label = &Label::get_in_game_label(enable);
 
         let patch = json!({
             "metadata": {
@@ -83,24 +83,10 @@ impl InstanceProvider {
     }
 
     pub async fn get_template_host(&self, route: &str) -> String {
-        let labels = vec![Label::new("epsilon.fr/template-provider", "true")];
-
-        let pods_result = self.kube.get_pods(Some(&labels), None).await;
-
-        pods_result.as_ref().unwrap();
-
-        if let Ok(pods) = pods_result {
-            let pod = pods.first();
-
-            if let Some(pod) = pod {
-                let status = pod.status.as_ref().unwrap();
-                let pod_ip = status.pod_ip.as_ref().unwrap();
-
-                return format!("http://{}:3333/{}", pod_ip, route);
-            }
-        }
-
-        format!("http://127.0.0.1:3333/{}", route)
+        format!(
+            "http://template-service.epsilon.svc.cluster.local:3333/{}",
+            route
+        )
     }
 
     pub async fn get_template(&self, template_name: &str) -> EResult<Template> {
@@ -159,7 +145,7 @@ pub async fn close(instance_name: &str, instance_provider: &State<Arc<InstancePr
 #[rocket::post("/in_game/<instance>")]
 pub async fn in_game(instance: &str, instance_provider: &State<Arc<InstanceProvider>>) {
     instance_provider
-        .enable_in_game_instance(instance)
+        .set_in_game_instance(instance, true)
         .await
         .unwrap();
 

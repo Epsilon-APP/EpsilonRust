@@ -7,6 +7,7 @@ use std::sync::Arc;
 use k8s_openapi::serde_json;
 use k8s_openapi::serde_json::{json, Value};
 
+use crate::epsilon::server::resources::Resources;
 use kube::api::{DeleteParams, ListParams, Patch, PatchParams, PostParams};
 use kube::{Api, Client, Error};
 
@@ -41,6 +42,7 @@ impl Kube {
         template: &str,
         labels_option: Option<&Vec<Label>>,
         port: u16,
+        resources: &Resources,
     ) -> Result<Pod, Error> {
         let default_label = self.get_default_label();
 
@@ -78,6 +80,16 @@ impl Kube {
                             "protocol": "TCP"
                         }
                     ],
+                    "resources": {
+                        "requests": {
+                            "cpu": resources.minimum.cpu,
+                            "memory": format!("{}M", resources.minimum.ram)
+                        },
+                        "limits": {
+                            "cpu": resources.maximum.cpu,
+                            "memory": format!("{}M", resources.maximum.ram)
+                        }
+                    },
                     "readinessProbe": {
                         "initialDelaySeconds": 5,
                         "periodSeconds": 1,

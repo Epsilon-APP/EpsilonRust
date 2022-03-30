@@ -14,8 +14,6 @@ use crate::epsilon::server::state::EpsilonState;
 use crate::epsilon::server::template::Template;
 use serde::Serialize;
 
-//TODO: Use Label from class::Label
-
 pub struct Instance {
     pod: Pod,
 }
@@ -32,19 +30,20 @@ pub struct InstanceJson {
 impl Instance {
     pub async fn new(kube: &Arc<Kube>, template: &Template) -> EResult<Self> {
         let template_name = &template.name;
-        let instance_type = &template.t.parse()?;
+        let instance_type = &template.t;
+        let resources = &template.resources;
         let slots = template.slots;
 
         let instance_label = Label::get_instance_type_label(instance_type);
         let template_label = Label::get_template_label(template_name);
         let slots_label = Label::get_slots_label(slots);
 
-        let port = instance_type.get_associated_port();
-
         let labels = vec![instance_label, template_label, slots_label];
 
+        let port = instance_type.get_associated_port();
+
         let pod = kube
-            .create_epsilon_pod(template_name, Some(&labels), port)
+            .create_epsilon_pod(template_name, Some(&labels), port, resources)
             .await?;
 
         Ok(Self { pod })
@@ -68,7 +67,7 @@ impl Instance {
             .labels
             .as_ref()
             .unwrap()
-            .get("epsilon.fr/template")
+            .get(Label::TEMPLATE_LABEL)
             .unwrap()
     }
 
@@ -78,7 +77,7 @@ impl Instance {
             .labels
             .as_ref()
             .unwrap()
-            .get("epsilon.fr/instance")
+            .get(Label::INSTANCE_TYPE_LABEL)
             .unwrap()
             .parse()
             .unwrap()
@@ -90,7 +89,7 @@ impl Instance {
             .labels
             .as_ref()
             .unwrap()
-            .get("epsilon.fr/slots")
+            .get(Label::SLOTS_LABEL)
             .unwrap()
             .parse()
             .unwrap()
