@@ -1,6 +1,4 @@
-use std::sync::Arc;
-
-use crate::{InstanceProvider, Task};
+use crate::Task;
 use std::time::Duration;
 
 pub struct TaskBuilder {}
