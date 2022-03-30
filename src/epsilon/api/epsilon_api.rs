@@ -15,7 +15,7 @@ impl EpsilonApi {
     pub fn new() -> Arc<EpsilonApi> {
         Arc::new(Self {
             channel: channel::<EpsilonEvent>(1024).0,
-        })²
+        })
     }
 
     pub fn send(&self, event: EpsilonEvent) {
