@@ -72,7 +72,7 @@ impl Kube {
                 "restartPolicy": "Never",
                 "containers": [{
                     "name": "main",
-                    "image": format!("{}/{}", "45.155.169.234:30000", template),
+                    "image": format!("{}/{}", "docker-registry.epsilon.svc.cluster.local:30000", template),
                     "imagePullPolicy": "Always",
                     "ports": [
                         {
