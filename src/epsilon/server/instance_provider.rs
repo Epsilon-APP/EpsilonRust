@@ -84,7 +84,7 @@ impl InstanceProvider {
 
     pub async fn get_template_host(&self, route: &str) -> String {
         format!(
-            "http://template-service.epsilon.svc.cluster.local:8000/{}",
+            "http://epsilon-template.epsilon.svc.cluster.local:8000/{}",
             route
         )
     }
