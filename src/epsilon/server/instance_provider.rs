@@ -107,7 +107,7 @@ impl InstanceProvider {
         }
     }
 
-    pub async fn get_templates(&self) -> EResult<HashMap<String, Template>> {
+    pub async fn get_templates(&self) -> EResult<Vec<Template>> {
         let url = self.get_template_host("templates").await;
 
         debug!("Fetching template list from {}", url);
@@ -115,7 +115,7 @@ impl InstanceProvider {
         let request = reqwest::get(&url).await?;
 
         if request.status().is_success() {
-            let template = request.json::<HashMap<String, Template>>().await?;
+            let template = request.json::<Vec<Template>>().await?;
 
             Ok(template)
         } else {

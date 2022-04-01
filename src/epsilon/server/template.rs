@@ -1,4 +1,5 @@
-use serde_json::{Map, Value};
+use serde_json::Value;
+use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
@@ -16,5 +17,5 @@ pub struct Template {
     pub slots: i32,
     pub resources: Resources,
 
-    pub labels: Map<String, Value>,
+    pub labels: HashMap<String, Value>,
 }
