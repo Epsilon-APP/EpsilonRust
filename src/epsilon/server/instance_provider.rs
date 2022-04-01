@@ -91,7 +91,7 @@ impl InstanceProvider {
 
     pub async fn get_template(&self, template_name: &str) -> EResult<Template> {
         let url = self
-            .get_template_host(&format!("template/{}", template_name))
+            .get_template_host(&format!("templates/{}", template_name))
             .await;
 
         debug!("Fetching template from {}", url);
