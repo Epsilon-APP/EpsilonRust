@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-#[derive(Serialize, PartialEq, Eq)]
+#[derive(Debug, Serialize, PartialEq, Eq)]
 pub enum EpsilonState {
     Starting,
     Running,
