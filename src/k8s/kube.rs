@@ -83,11 +83,11 @@ impl Kube {
                     "resources": {
                         "requests": {
                             "cpu": format!("{}", resources.minimum.cpu),
-                            "memory": format!("{}M", resources.minimum.ram + 100)
+                            "memory": format!("{}M", resources.minimum.ram + 512)
                         },
                         "limits": {
                             "cpu": format!("{}", resources.maximum.cpu),
-                            "memory": format!("{}M", resources.maximum.ram + 200)
+                            "memory": format!("{}M", resources.maximum.ram + 512)
                         }
                     },
                     "readinessProbe": {
