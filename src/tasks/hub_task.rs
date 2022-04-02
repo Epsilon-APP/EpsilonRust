@@ -64,15 +64,7 @@ impl Task for HubTask {
                         if let Ok(info) = info_result {
                             let online_player = info.players.online;
 
-                            info!(
-                                "Hub {} has {}/{} players online ({:?})",
-                                instance.get_name(),
-                                online_player,
-                                info.players.max,
-                                instance.get_state()
-                            );
-
-                            if instance.get_state() == EpsilonState::Running && online_player < n {
+                            if instance.get_state() == EpsilonState::Running && online_player <= n {
                                 n = online_player;
                                 hub_option = Some(instance);
                             }
