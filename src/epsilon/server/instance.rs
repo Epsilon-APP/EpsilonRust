@@ -119,7 +119,7 @@ impl Instance {
     pub fn need_close(&self) -> bool {
         let phase = self.pod.status.as_ref().unwrap().phase.as_ref().unwrap();
 
-        phase == "Failed" || phase == "Unknown"
+        phase == "Failed" || phase == "Unknown" || phase == "Succeeded"
     }
 
     pub fn get_state(&self) -> EpsilonState {
