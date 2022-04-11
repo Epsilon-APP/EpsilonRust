@@ -37,14 +37,6 @@ impl Task for ProxyTask {
             self.instance_provider.start_instance(template_name).await?;
         }
 
-        if let Some(proxy) = proxies.first() {
-            if proxy.get_state().eq(&EpsilonState::Running) {
-                let name = proxy.get_name();
-
-                self.instance_provider.remove_instance(name).await?;
-            }
-        }
-
         Ok(())
     }
 
