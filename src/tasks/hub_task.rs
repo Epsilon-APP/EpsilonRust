@@ -53,56 +53,61 @@ impl Task for HubTask {
                 )
                 .await?;
 
-            let hubs_ready = self
-                .instance_provider
-                .get_instances(
-                    &InstanceType::Server,
-                    Some(template_name),
-                    Some(&EpsilonState::Running),
-                )
-                .await?;
+            if hubs_starting.is_empty() {
+                let hubs_ready = self
+                    .instance_provider
+                    .get_instances(
+                        &InstanceType::Server,
+                        Some(template_name),
+                        Some(&EpsilonState::Running),
+                    )
+                    .await?;
 
-            if let Ok(hub_online_count) = hubs_ready.get_online_count().await {
-                let hub_number = hubs_ready.len() as u32;
+                if let Ok(hub_online_count) = hubs_ready.get_online_count().await {
+                    let hub_number = hubs_ready.len() as u32;
 
-                let hub_necessary =
-                    ((hub_online_count as f32 * 1.6 / self.hub_template.slots as f32) + 1.0) as u32;
+                    let hub_necessary = ((hub_online_count as f32 * 1.6
+                        / self.hub_template.slots as f32)
+                        + 1.0) as u32;
 
-                if hub_number < hub_necessary {
-                    self.instance_provider.start_instance(template_name).await?;
-                }
-
-                if hub_number > hub_necessary {
-                    if self.time != *DEFAULT_TIME {
-                        self.time += 1;
-
-                        return Ok(());
-                    } else {
-                        self.time = 0;
+                    if hub_number < hub_necessary {
+                        self.instance_provider.start_instance(template_name).await?;
                     }
 
-                    let mut n = 0;
-                    let mut hub_option = None;
+                    if hub_number > hub_necessary {
+                        if self.time != *DEFAULT_TIME {
+                            self.time += 1;
 
-                    for instance in hubs_ready {
-                        let info_result = instance.get_info().await;
+                            return Ok(());
+                        } else {
+                            self.time = 0;
+                        }
 
-                        if let Ok(info) = info_result {
-                            let online_player = info.players.online;
+                        let mut n = 0;
+                        let mut hub_option = None;
 
-                            if instance.get_state() == EpsilonState::Running && online_player <= n {
-                                n = online_player;
-                                hub_option = Some(instance);
+                        for instance in hubs_ready {
+                            let info_result = instance.get_info().await;
+
+                            if let Ok(info) = info_result {
+                                let online_player = info.players.online;
+
+                                if instance.get_state() == EpsilonState::Running
+                                    && online_player <= n
+                                {
+                                    n = online_player;
+                                    hub_option = Some(instance);
+                                }
                             }
                         }
-                    }
 
-                    if let Some(hub) = hub_option {
-                        let name = hub.get_name();
+                        if let Some(hub) = hub_option {
+                            let name = hub.get_name();
 
-                        self.instance_provider.remove_instance(name).await?;
+                            self.instance_provider.remove_instance(name).await?;
 
-                        info!("Hub {} is removed with {} online players", name, n);
+                            info!("Hub {} is removed with {} online players", name, n);
+                        }
                     }
                 }
             }
