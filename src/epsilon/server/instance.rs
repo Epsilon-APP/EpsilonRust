@@ -109,7 +109,10 @@ impl Instance {
     }
 
     pub async fn get_online_count(&self) -> i32 {
-        self.get_info().await.unwrap().players.online as i32
+        match self.get_info().await {
+            Ok(status) => status.players.online as i32,
+            Err(_) => 0,
+        }
     }
 
     pub async fn get_available_slots(&self) -> i32 {
