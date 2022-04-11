@@ -5,6 +5,7 @@ use tokio::sync::Mutex;
 use crate::epsilon::api::epsilon_api::EpsilonApi;
 use crate::epsilon::api::epsilon_events::EpsilonEvent::SendToServer;
 use crate::epsilon::queue::queue_provider::QueueProvider;
+use crate::epsilon::server::instance::VectorOfInstance;
 use crate::epsilon::server::instance_type::InstanceType;
 use crate::epsilon::server::state::EpsilonState;
 use crate::{EResult, InstanceProvider, Task};
@@ -50,7 +51,10 @@ impl Task for QueueTask {
                     )
                     .await?;
 
-                if instances_starting.is_empty() && instances_ready.is_empty() {
+                if instances_starting.is_empty()
+                    && (instances_ready.is_empty()
+                        || instances_ready.get_available_slots().await? < 3)
+                {
                     self.instance_provider.start_instance(template_name).await?;
                 }
 
