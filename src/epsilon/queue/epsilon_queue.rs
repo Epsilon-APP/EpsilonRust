@@ -1,25 +1,18 @@
 use crate::epsilon::queue::queue_provider::Group;
-use crate::epsilon::server::templates::template::Template;
 
 use std::collections::{HashSet, VecDeque};
 
 pub struct Queue {
-    template: Template,
     queue: VecDeque<Group>,
     in_queue: HashSet<String>,
 }
 
 impl Queue {
-    pub fn new(template: Template) -> Self {
+    pub fn new() -> Self {
         Self {
-            template,
             queue: VecDeque::new(),
             in_queue: HashSet::new(),
         }
-    }
-
-    pub fn get_template(&self) -> &Template {
-        &self.template
     }
 
     pub fn push(&mut self, group: Group) {

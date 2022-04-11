@@ -32,8 +32,6 @@ impl Task for QueueTask {
     async fn run(&mut self) -> EResult<()> {
         for (template_name, queue) in self.queue_provider.lock().await.get_queues() {
             if !queue.is_empty() {
-                let template = queue.get_template();
-
                 let instances_starting = self
                     .instance_provider
                     .get_instances(
@@ -57,23 +55,17 @@ impl Task for QueueTask {
                 }
 
                 if let Some(instance) = instances_ready.first() {
-                    let info_result = instance.get_info().await;
+                    let mut available_slots = instance.get_available_slots().await;
 
-                    if let Ok(info) = info_result {
-                        let mut available_slots = template.slots as u32 - info.players.online;
+                    while !queue.is_empty() && available_slots != 0 {
+                        if let Some(group) = queue.pop() {
+                            let group_size = group.players.len() as i32;
 
-                        while !queue.is_empty() && available_slots != 0 {
-                            if let Some(group) = queue.pop() {
-                                let group_size = group.players.len() as u32;
+                            if group_size <= available_slots {
+                                available_slots -= group_size;
 
-                                if group_size <= available_slots {
-                                    available_slots -= group_size;
-
-                                    self.epsilon_api.send(SendToServer(
-                                        group,
-                                        String::from(instance.get_name()),
-                                    ));
-                                }
+                                self.epsilon_api
+                                    .send(SendToServer(group, String::from(instance.get_name())));
                             }
                         }
                     }

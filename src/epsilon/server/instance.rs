@@ -4,8 +4,7 @@ use crate::epsilon::server::instance_type::InstanceType;
 use crate::k8s::label::Label;
 use crate::{EResult, Kube};
 use anyhow::format_err;
-use async_minecraft_ping::ServerDescription::Plain;
-use async_minecraft_ping::{ConnectionConfig, ServerPlayers, ServerVersion, StatusResponse};
+use async_minecraft_ping::{ConnectionConfig, StatusResponse};
 use k8s_openapi::api::core::v1::Pod;
 use std::sync::Arc;
 use std::time::Duration;
@@ -103,25 +102,18 @@ impl Instance {
             let timeout = Duration::from_millis(500);
             let config = ConnectionConfig::build(address).with_timeout(timeout);
 
-            match config.connect().await {
-                Ok(connection) => Ok(connection.status().await?.status),
-                Err(_) => Ok(StatusResponse {
-                    version: ServerVersion {
-                        name: "".to_string(),
-                        protocol: 0,
-                    },
-                    players: ServerPlayers {
-                        max: 10,
-                        online: 0,
-                        sample: None,
-                    },
-                    description: Plain("Description".to_string()),
-                    favicon: None,
-                }),
-            }
+            Ok(config.connect().await.unwrap().status().await?.status)
         } else {
             Err(format_err!("No address found"))
         }
+    }
+
+    pub async fn get_online_count(&self) -> i32 {
+        self.get_info().await.unwrap().players.online as i32
+    }
+
+    pub async fn get_available_slots(&self) -> i32 {
+        self.get_instance_slots() - self.get_online_count().await
     }
 
     pub fn need_close(&self) -> bool {
@@ -143,7 +135,7 @@ impl Instance {
             .any(|condition| condition.type_ == "Ready" && condition.status == "True")
             && status.phase.as_ref().unwrap() == "Running";
 
-        let label = &labels.get("epsilon.fr/in-game");
+        let label = &labels.get(Label::IN_GAME_LABEL);
         let is_in_game = label.is_some() && label.unwrap() == "true";
 
         let is_stopping = metadata.deletion_timestamp.is_some() || self.need_close();
@@ -165,7 +157,7 @@ impl Instance {
             .labels
             .as_ref()
             .unwrap()
-            .contains_key("epsilon.fr/main")
+            .contains_key(Label::DEFAULT_LABEL)
     }
 
     pub async fn to_json(&self) -> InstanceJson {
@@ -186,16 +178,27 @@ impl Instance {
 
 #[async_trait]
 pub trait VectorOfInstance {
-    async fn get_online_count(&self) -> EResult<u32>;
+    async fn get_available_slots(&self) -> EResult<i32>;
+    async fn get_online_count(&self) -> EResult<i32>;
 }
 
 #[async_trait]
 impl VectorOfInstance for Vec<Instance> {
-    async fn get_online_count(&self) -> EResult<u32> {
+    async fn get_available_slots(&self) -> EResult<i32> {
+        let mut available_slots = 0;
+
+        for instance in self {
+            available_slots += instance.get_available_slots().await;
+        }
+
+        Ok(available_slots)
+    }
+
+    async fn get_online_count(&self) -> EResult<i32> {
         let mut number = 0;
 
         for instance in self {
-            number += instance.get_info().await?.players.online;
+            number += instance.get_online_count().await
         }
 
         Ok(number)

@@ -19,7 +19,7 @@ impl QueueProvider {
         let mut map = HashMap::new();
 
         for template in instance_provider.get_templates().await? {
-            map.insert(String::from(&template.name), Queue::new(template));
+            map.insert(String::from(&template.name), Queue::new());
         }
 
         Ok(Arc::new(Mutex::new(QueueProvider { queue_map: map })))

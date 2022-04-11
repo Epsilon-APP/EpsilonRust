@@ -7,6 +7,8 @@ pub struct Label {
 }
 
 impl Label {
+    pub const DEFAULT_LABEL: &'static str = "epsilon.fr/default";
+
     pub const INSTANCE_TYPE_LABEL: &'static str = "epsilon.fr/instance";
     pub const TEMPLATE_LABEL: &'static str = "epsilon.fr/template";
     pub const SLOTS_LABEL: &'static str = "epsilon.fr/slots";
@@ -43,7 +45,7 @@ impl Label {
     }
 
     pub fn get_default_label() -> Label {
-        Label::new("epsilon.fr/default", "true")
+        Label::new(Self::DEFAULT_LABEL, "true")
     }
 
     pub fn get_instance_type_label(instance_type: &InstanceType) -> Label {
