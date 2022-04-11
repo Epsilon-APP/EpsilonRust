@@ -58,7 +58,7 @@ impl Task for QueueTask {
                     self.instance_provider.start_instance(template_name).await?;
                 }
 
-                if let Some(instance) = instances_ready.first() {
+                for instance in instances_ready {
                     let mut available_slots = instance.get_available_slots().await;
 
                     while !queue.is_empty() && available_slots > 0 {
