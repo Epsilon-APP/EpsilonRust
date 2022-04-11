@@ -42,6 +42,10 @@ impl Label {
         str
     }
 
+    pub fn get_default_label() -> Label {
+        Label::new("epsilon.fr/default", "true")
+    }
+
     pub fn get_instance_type_label(instance_type: &InstanceType) -> Label {
         Label::new(Label::INSTANCE_TYPE_LABEL, &instance_type.to_string())
     }

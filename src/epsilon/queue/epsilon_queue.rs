@@ -1,5 +1,6 @@
 use crate::epsilon::queue::queue_provider::Group;
-use crate::epsilon::server::template::Template;
+use crate::epsilon::server::templates::template::Template;
+
 use std::collections::{HashSet, VecDeque};
 
 pub struct Queue {

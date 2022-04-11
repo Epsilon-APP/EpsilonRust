@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 
 use crate::epsilon::server::instance_type::InstanceType;
-use crate::epsilon::server::resources::Resources;
+use crate::epsilon::server::templates::resources::Resources;
 
 #[derive(Serialize, Deserialize)]
 pub struct Template {

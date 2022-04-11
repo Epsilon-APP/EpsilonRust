@@ -56,18 +56,11 @@ impl Task for QueueTask {
                     self.instance_provider.start_instance(template_name).await?;
                 }
 
-                if !instances_ready.is_empty() {
-                    let instance = instances_ready.first().unwrap();
+                if let Some(instance) = instances_ready.first() {
                     let info_result = instance.get_info().await;
 
                     if let Ok(info) = info_result {
                         let mut available_slots = template.slots as u32 - info.players.online;
-
-                        if available_slots == 0 && instances_starting.is_empty() {
-                            self.instance_provider.start_instance(template_name).await?;
-
-                            return Ok(());
-                        }
 
                         while !queue.is_empty() && available_slots != 0 {
                             if let Some(group) = queue.pop() {

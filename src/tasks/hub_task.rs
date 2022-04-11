@@ -2,7 +2,7 @@ use crate::epsilon::queue::queue_provider::QueueProvider;
 use crate::epsilon::server::instance::VectorOfInstance;
 use crate::epsilon::server::instance_type::InstanceType;
 use crate::epsilon::server::state::EpsilonState;
-use crate::epsilon::server::template::Template;
+use crate::epsilon::server::templates::template::Template;
 use crate::{EResult, EpsilonApi, InstanceProvider, Task};
 use async_trait::async_trait;
 use std::sync::Arc;

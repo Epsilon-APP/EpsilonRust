@@ -11,7 +11,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use crate::epsilon::server::state::EpsilonState;
-use crate::epsilon::server::template::Template;
+use crate::epsilon::server::templates::template::Template;
 use serde::Serialize;
 
 pub struct Instance {

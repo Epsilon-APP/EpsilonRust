@@ -3,13 +3,14 @@ use crate::k8s::label::Label;
 use k8s_openapi::api::core::v1::Pod;
 use k8s_openapi::apimachinery::pkg::version::Info;
 use std::sync::Arc;
+use std::time::Duration;
 
 use k8s_openapi::serde_json;
 use k8s_openapi::serde_json::{json, Value};
 
-use crate::epsilon::server::resources::Resources;
+use crate::epsilon::server::templates::resources::Resources;
 use kube::api::{DeleteParams, ListParams, Patch, PatchParams, PostParams};
-use kube::{Api, Client, Error};
+use kube::{Api, Client, Config, Error};
 
 pub struct Kube {
     namespace: String,
@@ -19,9 +20,10 @@ pub struct Kube {
 
 impl Kube {
     pub async fn new(namespace: &str) -> Arc<Kube> {
-        let client = Client::try_default()
-            .await
-            .expect("Failed to create kube client");
+        let mut config = Config::infer().await.expect("Failed to load kube config");
+        config.timeout = Some(Duration::from_secs(3));
+
+        let client = Client::try_from(config).expect("Failed to create kube client");
 
         let info = client
             .apiserver_version()
@@ -44,7 +46,7 @@ impl Kube {
         port: u16,
         resources: &Resources,
     ) -> Result<Pod, Error> {
-        let default_label = self.get_default_label();
+        let default_label = Label::get_default_label();
 
         let mut labels_map = serde_json::Map::new();
 
@@ -117,7 +119,7 @@ impl Kube {
     }
 
     pub async fn get_epsilon_pods(&self, limit_option: Option<u32>) -> Result<Vec<Pod>, Error> {
-        self.get_pods(Some(&vec![self.get_default_label()]), limit_option)
+        self.get_pods(Some(&vec![Label::get_default_label()]), limit_option)
             .await
     }
 
@@ -158,9 +160,5 @@ impl Kube {
 
     pub fn get_info(&self) -> &Info {
         &self.info
-    }
-
-    fn get_default_label(&self) -> Label {
-        Label::new("epsilon.fr/main", "true")
     }
 }

@@ -19,6 +19,7 @@ serde = { version = "1.0", features = ["derive"] }
 
 serde_json = "1.0"
 
+thiserror = "1.0.30"
 anyhow = { version = "1.0.53", features = ["backtrace"]}
 
 log = "0.4.14"

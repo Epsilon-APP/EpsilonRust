@@ -1,11 +1,11 @@
 use crate::k8s::label::Label;
 use crate::{EResult, Kube};
-use std::collections::HashMap;
 
+use crate::epsilon::epsilon_error::EpsilonError;
 use crate::epsilon::server::instance::{Instance, InstanceJson};
 use crate::epsilon::server::instance_type::InstanceType;
 use crate::epsilon::server::state::EpsilonState;
-use crate::epsilon::server::template::Template;
+use crate::epsilon::server::templates::template::Template;
 use anyhow::format_err;
 use rocket::State;
 use serde_json::json;
@@ -47,7 +47,7 @@ impl InstanceProvider {
         &self,
         instance_type: &InstanceType,
         template_option: Option<&str>,
-        state: Option<&EpsilonState>,
+        state_option: Option<&EpsilonState>,
     ) -> EResult<Vec<Instance>> {
         let mut labels = vec![Label::get_instance_type_label(instance_type)];
 
@@ -59,9 +59,9 @@ impl InstanceProvider {
 
         let map = pods.into_iter().map(Instance::from_pod);
 
-        match state {
-            Some(_) => Ok(map
-                .filter(|instance| instance.get_state().eq(state.unwrap()))
+        match state_option {
+            Some(state) => Ok(map
+                .filter(|instance| instance.get_state().eq(state))
                 .collect()),
 
             None => Ok(map.collect()),
@@ -124,21 +124,30 @@ impl InstanceProvider {
     }
 }
 
-#[rocket::post("/create/<template_name>")]
-pub async fn create(template_name: &str, instance_provider: &State<Arc<InstanceProvider>>) {
+#[rocket::post("/create/<template>")]
+pub async fn create(template: &str, instance_provider: &State<Arc<InstanceProvider>>) {
     instance_provider
-        .start_instance(template_name)
+        .start_instance(template)
         .await
+        .map_err(|_e| {
+            EpsilonError::ApiServerError(format!(
+                "Failed to create an instance from template ({})",
+                template
+            ))
+        })
         .unwrap();
 
-    info!("An instance has been created (template={})", template_name);
+    info!("An instance has been created (template={})", template);
 }
 
-#[rocket::post("/close/<instance_name>")]
-pub async fn close(instance_name: &str, instance_provider: &State<Arc<InstanceProvider>>) {
+#[rocket::post("/close/<instance>")]
+pub async fn close(instance: &str, instance_provider: &State<Arc<InstanceProvider>>) {
     instance_provider
-        .remove_instance(instance_name)
+        .remove_instance(instance)
         .await
+        .map_err(|_| {
+            EpsilonError::ApiServerError(format!("Failed to close instance ({})", instance))
+        })
         .unwrap();
 }
 
@@ -147,16 +156,25 @@ pub async fn in_game(instance: &str, instance_provider: &State<Arc<InstanceProvi
     instance_provider
         .set_in_game_instance(instance, true)
         .await
+        .map_err(|_| {
+            EpsilonError::ApiServerError(format!("Failed to set in game instance ({})", instance))
+        })
         .unwrap();
 
     info!("An instance is now in game (name={})", instance);
 }
 
-#[rocket::get("/get/<template_name>")]
-pub async fn get(template_name: &str, instance_provider: &State<Arc<InstanceProvider>>) -> String {
+#[rocket::get("/get/<template>")]
+pub async fn get(template: &str, instance_provider: &State<Arc<InstanceProvider>>) -> String {
     let instances = instance_provider
-        .get_instances(&InstanceType::Server, Some(template_name), None)
+        .get_instances(&InstanceType::Server, Some(template), None)
         .await
+        .map_err(|_| {
+            EpsilonError::ApiServerError(format!(
+                "Failed to get instance from template {}",
+                template
+            ))
+        })
         .unwrap()
         .into_iter();
 
@@ -174,6 +192,7 @@ pub async fn get_all(instance_provider: &State<Arc<InstanceProvider>>) -> String
     let instances = instance_provider
         .get_instances(&InstanceType::Server, None, None)
         .await
+        .map_err(|_| EpsilonError::ApiServerError("Failed to get every instance".to_string()))
         .unwrap()
         .into_iter();
 
