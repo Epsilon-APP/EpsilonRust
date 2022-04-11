@@ -6,11 +6,16 @@ use crate::epsilon::server::templates::template::Template;
 use crate::{EResult, EpsilonApi, InstanceProvider, Task};
 use async_trait::async_trait;
 use std::sync::Arc;
+use std::time::Duration;
 use tokio::sync::Mutex;
+
+const DEFAULT_TIME: &'static u32 = &60;
 
 pub struct HubTask {
     instance_provider: Arc<InstanceProvider>,
     hub_template: Template,
+
+    time: u32,
 }
 
 #[async_trait]
@@ -23,6 +28,8 @@ impl Task for HubTask {
         Ok(Box::new(Self {
             instance_provider: Arc::clone(instance_provider),
             hub_template: instance_provider.get_template("hub").await?,
+
+            time: 0,
         }))
     }
 
@@ -37,15 +44,26 @@ impl Task for HubTask {
         let proxy_number = proxies.len();
 
         if proxy_number > 0 {
-            let hubs = self
+            let hubs_starting = self
                 .instance_provider
-                .get_instances(&InstanceType::Server, Some(template_name), None)
+                .get_instances(
+                    &InstanceType::Server,
+                    Some(template_name),
+                    Some(&EpsilonState::Starting),
+                )
                 .await?;
 
-            let hub_online_count_result = hubs.get_online_count().await;
+            let hubs_ready = self
+                .instance_provider
+                .get_instances(
+                    &InstanceType::Server,
+                    Some(template_name),
+                    Some(&EpsilonState::Running),
+                )
+                .await?;
 
-            if let Ok(hub_online_count) = hub_online_count_result {
-                let hub_number = hubs.len() as u32;
+            if let Ok(hub_online_count) = hubs_ready.get_online_count().await {
+                let hub_number = hubs_ready.len() as u32;
 
                 let hub_necessary =
                     ((hub_online_count as f32 * 1.6 / self.hub_template.slots as f32) + 1.0) as u32;
@@ -55,10 +73,18 @@ impl Task for HubTask {
                 }
 
                 if hub_number > hub_necessary {
+                    if self.time != *DEFAULT_TIME {
+                        self.time += 1;
+
+                        return Ok(());
+                    } else {
+                        self.time = 0;
+                    }
+
                     let mut n = 0;
                     let mut hub_option = None;
 
-                    for instance in hubs {
+                    for instance in hubs_ready {
                         let info_result = instance.get_info().await;
 
                         if let Ok(info) = info_result {
