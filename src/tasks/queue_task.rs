@@ -53,7 +53,7 @@ impl Task for QueueTask {
 
                 if instances_starting.is_empty()
                     && (instances_ready.is_empty()
-                        || instances_ready.get_available_slots().await? < 3)
+                        || instances_ready.get_available_slots().await? < 1)
                 {
                     self.instance_provider.start_instance(template_name).await?;
                 }
@@ -61,7 +61,7 @@ impl Task for QueueTask {
                 if let Some(instance) = instances_ready.first() {
                     let mut available_slots = instance.get_available_slots().await;
 
-                    while !queue.is_empty() && available_slots != 0 {
+                    while !queue.is_empty() && available_slots > 0 {
                         if let Some(group) = queue.pop() {
                             let group_size = group.players.len() as i32;
 
