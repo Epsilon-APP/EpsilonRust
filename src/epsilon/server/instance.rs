@@ -102,7 +102,7 @@ impl Instance {
             let timeout = Duration::from_millis(500);
             let config = ConnectionConfig::build(address).with_timeout(timeout);
 
-            Ok(config.connect().await.unwrap().status().await?.status)
+            Ok(config.connect().await?.status().await?.status)
         } else {
             Err(format_err!("No address found"))
         }
