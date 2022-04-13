@@ -48,6 +48,7 @@ impl InstanceProvider {
         instance_type: &InstanceType,
         template_option: Option<&str>,
         state_option: Option<&EpsilonState>,
+        get_all: bool,
     ) -> EResult<Vec<Instance>> {
         let mut labels = vec![Label::get_instance_type_label(instance_type)];
 
@@ -61,10 +62,12 @@ impl InstanceProvider {
 
         match state_option {
             Some(state) => Ok(map
-                .filter(|instance| instance.get_state().eq(state))
+                .filter(|instance| instance.get_state() == *state)
                 .collect()),
 
-            None => Ok(map.collect()),
+            None => Ok(map
+                .filter(|instance| get_all || !instance.is_failed())
+                .collect()),
         }
     }
 
@@ -167,7 +170,7 @@ pub async fn in_game(instance: &str, instance_provider: &State<Arc<InstanceProvi
 #[rocket::get("/get/<template>")]
 pub async fn get(template: &str, instance_provider: &State<Arc<InstanceProvider>>) -> String {
     let instances = instance_provider
-        .get_instances(&InstanceType::Server, Some(template), None)
+        .get_instances(&InstanceType::Server, Some(template), None, false)
         .await
         .map_err(|_| {
             EpsilonError::ApiServerError(format!(
@@ -190,7 +193,7 @@ pub async fn get(template: &str, instance_provider: &State<Arc<InstanceProvider>
 #[rocket::get("/get_all")]
 pub async fn get_all(instance_provider: &State<Arc<InstanceProvider>>) -> String {
     let instances = instance_provider
-        .get_instances(&InstanceType::Server, None, None)
+        .get_instances(&InstanceType::Server, None, None, false)
         .await
         .map_err(|_| EpsilonError::ApiServerError("Failed to get every instance".to_string()))
         .unwrap()

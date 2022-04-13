@@ -38,7 +38,12 @@ impl Task for HubTask {
 
         let proxies = self
             .instance_provider
-            .get_instances(&InstanceType::Proxy, None, Some(&EpsilonState::Running))
+            .get_instances(
+                &InstanceType::Proxy,
+                None,
+                Some(&EpsilonState::Running),
+                false,
+            )
             .await?;
 
         let proxy_number = proxies.len();
@@ -50,6 +55,7 @@ impl Task for HubTask {
                     &InstanceType::Server,
                     Some(template_name),
                     Some(&EpsilonState::Starting),
+                    false,
                 )
                 .await?;
 
@@ -60,6 +66,7 @@ impl Task for HubTask {
                         &InstanceType::Server,
                         Some(template_name),
                         Some(&EpsilonState::Running),
+                        false,
                     )
                     .await?;
 

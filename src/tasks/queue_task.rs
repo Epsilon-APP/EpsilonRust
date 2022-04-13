@@ -39,6 +39,7 @@ impl Task for QueueTask {
                         &InstanceType::Server,
                         Some(template_name),
                         Some(&EpsilonState::Starting),
+                        false,
                     )
                     .await?;
 
@@ -48,6 +49,7 @@ impl Task for QueueTask {
                         &InstanceType::Server,
                         Some(template_name),
                         Some(&EpsilonState::Running),
+                        false,
                     )
                     .await?;
 

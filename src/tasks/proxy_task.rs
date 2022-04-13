@@ -30,7 +30,7 @@ impl Task for ProxyTask {
 
         let proxies = self
             .instance_provider
-            .get_instances(&InstanceType::Proxy, None, None)
+            .get_instances(&InstanceType::Proxy, None, None, false)
             .await?;
 
         if proxies.is_empty() {

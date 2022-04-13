@@ -119,10 +119,14 @@ impl Instance {
         self.get_instance_slots() - self.get_online_count().await
     }
 
-    pub fn need_close(&self) -> bool {
+    pub fn is_succeeded(&self) -> bool {
+        self.pod.status.as_ref().unwrap().phase.as_ref().unwrap() == "Succeeded"
+    }
+
+    pub fn is_failed(&self) -> bool {
         let phase = self.pod.status.as_ref().unwrap().phase.as_ref().unwrap();
 
-        phase == "Failed" || phase == "Unknown" || phase == "Succeeded"
+        phase == "Failed" || phase == "Unknown"
     }
 
     pub fn get_state(&self) -> EpsilonState {
@@ -141,7 +145,7 @@ impl Instance {
         let label = &labels.get(Label::IN_GAME_LABEL);
         let is_in_game = label.is_some() && label.unwrap() == "true";
 
-        let is_stopping = metadata.deletion_timestamp.is_some() || self.need_close();
+        let is_stopping = metadata.deletion_timestamp.is_some() || self.is_succeeded();
 
         if is_ready && is_in_game {
             EpsilonState::InGame

@@ -6,6 +6,7 @@ use crate::epsilon::queue::queue_provider::QueueProvider;
 use crate::epsilon::server::instance_provider::InstanceProvider;
 use crate::epsilon::server::EResult;
 use crate::k8s::kube::Kube;
+use crate::tasks::clean_task::CleanTask;
 use crate::tasks::hub_task::HubTask;
 use crate::tasks::proxy_task::ProxyTask;
 use crate::tasks::queue_task::QueueTask;
@@ -94,10 +95,10 @@ async fn main() -> EResult<()> {
             HubTask::init(&epsilon_api, &instance_provider, &queue_provider).await?,
             2000,
         )
-        // .ignite_task(
-        //     CleanTask::init(&epsilon_api, &instance_provider, &queue_provider).await?,
-        //     10000,
-        // )
+        .ignite_task(
+            CleanTask::init(&epsilon_api, &instance_provider, &queue_provider).await?,
+            10000,
+        )
         .ignite_task(
             QueueTask::init(&epsilon_api, &instance_provider, &queue_provider).await?,
             2000,

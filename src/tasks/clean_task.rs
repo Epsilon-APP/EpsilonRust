@@ -27,35 +27,31 @@ impl Task for CleanTask {
     async fn run(&mut self) -> EResult<()> {
         let servers = self
             .instance_provider
-            .get_instances(&InstanceType::Server, None, None)
+            .get_instances(&InstanceType::Server, None, None, false)
             .await?;
 
         let proxies = self
             .instance_provider
-            .get_instances(&InstanceType::Proxy, None, None)
+            .get_instances(&InstanceType::Proxy, None, None, false)
             .await?;
 
         for instance in servers {
-            if instance.need_close() {
+            if instance.is_succeeded() {
                 let name = instance.get_name();
                 let event = EpsilonEvent::ClearServer(name.to_string());
 
                 self.epsilon_api.send(event);
                 self.instance_provider.remove_instance(name).await?;
-
-                info!("Cleaned server: {}", name);
             }
         }
 
         for instance in proxies {
-            if instance.need_close() {
+            if instance.is_succeeded() {
                 let name = instance.get_name();
                 let event = EpsilonEvent::ClearServer(name.to_string());
 
                 self.epsilon_api.send(event);
                 self.instance_provider.remove_instance(name).await?;
-
-                info!("Clean proxy: {}", name);
             }
         }
 
@@ -63,6 +59,6 @@ impl Task for CleanTask {
     }
 
     fn get_name(&self) -> &'static str {
-        "Clean:Task, clean all servers and proxies that need to be closed"
+        "Clean:Task, clean all servers and proxies that need to be closed (Succeeded = true)"
     }
 }
