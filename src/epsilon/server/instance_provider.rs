@@ -1,5 +1,6 @@
 use crate::k8s::label::Label;
 use crate::{EResult, Kube};
+use std::env;
 
 use crate::epsilon::epsilon_error::EpsilonError;
 use crate::epsilon::server::instance::{Instance, InstanceJson};
@@ -87,7 +88,8 @@ impl InstanceProvider {
 
     pub async fn get_template_host(&self, route: &str) -> String {
         format!(
-            "http://epsilon-template.epsilon.svc.cluster.local:8000/{}",
+            "http://{}:8000/{}",
+            env::var("HOST_TEMPLATE").unwrap(),
             route
         )
     }

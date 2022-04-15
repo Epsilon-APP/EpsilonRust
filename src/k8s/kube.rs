@@ -1,4 +1,5 @@
 use crate::k8s::label::Label;
+use std::env;
 
 use k8s_openapi::api::core::v1::Pod;
 use k8s_openapi::apimachinery::pkg::version::Info;
@@ -74,8 +75,13 @@ impl Kube {
                 "restartPolicy": "Never",
                 "containers": [{
                     "name": "main",
-                    "image": format!("{}/{}", "docker-registry.epsilon.svc.cluster.local:30000", template),
+                    "image": format!("{}/{}", env::var("HOST_REGISTRY").unwrap(), template),
                     "imagePullPolicy": "Always",
+                    "envFrom": [{
+                        "configMapRef": {
+                            "name": "epsilon-configuration"
+                        }
+                    }],
                     "ports": [
                         {
                             "containerPort": port,

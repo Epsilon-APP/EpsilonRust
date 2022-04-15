@@ -15,6 +15,7 @@ use crate::tasks::task_builder::TaskBuilder;
 use env_logger::fmt::Color;
 use k8s_openapi::chrono::Local;
 use log::{Level, LevelFilter};
+use std::env;
 use std::io::Write;
 use std::sync::Arc;
 
@@ -72,7 +73,11 @@ async fn main() -> EResult<()> {
 
     println!("{}", epsilon.replace("{}", env!("CARGO_PKG_VERSION")));
 
-    let kube = Kube::new("epsilon").await;
+    let namespace = env::var("KUBE_NAMESPACE").unwrap();
+
+    info!("Kube listen in namespace: {}", namespace);
+
+    let kube = Kube::new(&namespace).await;
 
     info!(
         "Kube client has been started (Namespace={}, Version={})",
