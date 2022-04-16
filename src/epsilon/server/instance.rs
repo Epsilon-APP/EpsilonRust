@@ -168,7 +168,11 @@ impl Instance {
     }
 
     pub async fn to_json(&self) -> InstanceJson {
+        info!("Converting instance to json");
+
         let info_result = self.get_info().await;
+
+        info!("Got info");
 
         InstanceJson {
             name: self.get_name().to_string(),
