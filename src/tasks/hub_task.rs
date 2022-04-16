@@ -94,12 +94,14 @@ impl Task for HubTask {
                         let mut hub_option = None;
 
                         for instance in hubs_ready {
-                            let online_player = instance.get_online_count().await;
+                            let online_player_result = instance.get_online_count().await;
 
-                            if instance.get_state() == EpsilonState::Running && online_player <= n {
-                                n = online_player;
-                                hub_option = Some(instance);
-                            }
+                            if let Ok(online_player) = online_player_result {
+                                if instance.get_state() == EpsilonState::Running && online_player <= n {
+                                    n = online_player;
+                                    hub_option = Some(instance);
+                                }
+                            };
                         }
 
                         if let Some(hub) = hub_option {

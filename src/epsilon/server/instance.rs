@@ -108,15 +108,17 @@ impl Instance {
         }
     }
 
-    pub async fn get_online_count(&self) -> i32 {
-        match self.get_info().await {
-            Ok(status) => status.players.online as i32,
-            Err(_) => 0,
-        }
+    pub async fn get_online_count(&self) -> EResult<i32> {
+        Ok(self.get_info().await?.players.online as i32)
     }
 
     pub async fn get_available_slots(&self) -> i32 {
-        self.get_instance_slots() - self.get_online_count().await
+        let online_count_result = self.get_online_count().await;
+
+        match online_count_result {
+            Ok(online_count) => self.get_instance_slots() - online_count,
+            Err(_) => 0
+        }
     }
 
     pub fn is_succeeded(&self) -> bool {
@@ -205,7 +207,7 @@ impl VectorOfInstance for Vec<Instance> {
         let mut number = 0;
 
         for instance in self {
-            number += instance.get_online_count().await
+            number += instance.get_online_count().await.unwrap_or(0)
         }
 
         Ok(number)
