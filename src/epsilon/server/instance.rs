@@ -99,7 +99,7 @@ impl Instance {
         let address_option = status.pod_ip.as_ref();
 
         if let Some(address) = address_option {
-            let timeout = Duration::from_millis(500);
+            let timeout = Duration::from_millis(150);
             let config = ConnectionConfig::build(address).with_timeout(timeout);
 
             Ok(config.connect().await?.status().await?.status)
@@ -168,11 +168,7 @@ impl Instance {
     }
 
     pub async fn to_json(&self) -> InstanceJson {
-        info!("Converting instance to json");
-
         let info_result = self.get_info().await;
-
-        info!("Got info");
 
         InstanceJson {
             name: self.get_name().to_string(),
