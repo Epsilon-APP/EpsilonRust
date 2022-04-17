@@ -189,6 +189,10 @@ pub trait VectorOfInstance {
 #[async_trait]
 impl VectorOfInstance for Vec<Instance> {
     async fn get_available_slots(&self) -> EResult<i32> {
+        if self.is_empty() {
+            return Err(format_err!("No instances found"));
+        }
+
         let mut available_slots = 0;
 
         for instance in self {
