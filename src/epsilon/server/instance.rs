@@ -146,10 +146,10 @@ impl Instance {
 
         if is_ready && is_in_game {
             EpsilonState::InGame
-        } else if is_ready {
-            EpsilonState::Running
         } else if is_stopping {
             EpsilonState::Stopping
+        } else if is_ready {
+            EpsilonState::Running
         } else {
             EpsilonState::Starting
         }
