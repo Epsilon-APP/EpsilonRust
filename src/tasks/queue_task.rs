@@ -53,29 +53,36 @@ impl Task for QueueTask {
                     )
                     .await?;
 
-                if instances_starting.is_empty()
-                    && (instances_ready.is_empty()
-                        || instances_ready.get_available_slots().await? < 1)
-                {
+                if instances_starting.is_empty() && instances_ready.is_empty() {
                     self.instance_provider.start_instance(template_name).await?;
                 }
 
+                let ready_available_slots_result = instances_ready.get_available_slots().await;
+
+                if let Ok(ready_available_slots) = ready_available_slots_result {
+                    if instances_starting.is_empty() && ready_available_slots < 1 {
+                        self.instance_provider.start_instance(template_name).await?;
+                    }
+                }
+
                 for instance in instances_ready {
-                    let mut available_slots = instance.get_available_slots().await;
+                    if let Ok(mut available_slots) = instance.get_available_slots().await {
+                        while !queue.is_empty() && available_slots > 0 {
+                            if let Some(group) = queue.pop() {
+                                let group_size = group.players.len() as i32;
 
-                    while !queue.is_empty() && available_slots > 0 {
-                        if let Some(group) = queue.pop() {
-                            let group_size = group.players.len() as i32;
+                                if group_size <= available_slots {
+                                    info!("Sending group ({})", available_slots);
 
-                            if group_size <= available_slots {
-                                info!("Sending group ({})", available_slots);
+                                    available_slots -= group_size;
 
-                                available_slots -= group_size;
+                                    info!("New sending group ({})", available_slots);
 
-                                info!("New sending group ({})", available_slots);
-
-                                self.epsilon_api
-                                    .send(SendToServer(group, String::from(instance.get_name())));
+                                    self.epsilon_api.send(SendToServer(
+                                        group,
+                                        String::from(instance.get_name()),
+                                    ));
+                                }
                             }
                         }
                     }
