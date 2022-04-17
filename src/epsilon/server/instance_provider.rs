@@ -194,7 +194,6 @@ pub async fn get(template: &str, instance_provider: &State<Arc<InstanceProvider>
 
 #[rocket::get("/get_all")]
 pub async fn get_all(instance_provider: &State<Arc<InstanceProvider>>) -> String {
-
     info!("Fetching all instances");
 
     let instances = instance_provider
@@ -206,10 +205,16 @@ pub async fn get_all(instance_provider: &State<Arc<InstanceProvider>>) -> String
 
     info!("Fetched {} instances", instances.len());
 
-    let mut json_array: Vec<InstanceJson> = Vec::with_capacity(instances.len());
+    let mut json_array: Vec<InstanceJson> = Vec::new();
 
     for instance in instances {
-        json_array.push(instance.to_json().await);
+        let json = instance.to_json().await;
+
+        info!("JSON");
+
+        json_array.push(json);
+
+        info!("PUSH")
     }
 
     info!("Converted {} instances to json", json_array.len());
