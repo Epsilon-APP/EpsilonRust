@@ -44,6 +44,13 @@ impl InstanceProvider {
         Ok(self.kube.delete_pod(name).await?)
     }
 
+    pub async fn get_instance(&self, instance_name: &str) -> EResult<Instance> {
+        let pod = self.kube.get_pod(instance_name).await?;
+        let instance = Instance::from_pod(pod);
+
+        Ok(instance)
+    }
+
     pub async fn get_instances(
         &self,
         instance_type: &InstanceType,
@@ -220,4 +227,14 @@ pub async fn get_all(instance_provider: &State<Arc<InstanceProvider>>) -> String
     info!("Converted {} instances to json", json_array.len());
 
     json!({ "instances": json_array }).to_string()
+}
+
+#[rocket::get("/get_from_name/<instance_name>")]
+pub async fn get_from_name(
+    instance_name: &str,
+    instance_provider: &State<Arc<InstanceProvider>>,
+) -> String {
+    let instance = instance_provider.get_instance(instance_name).await.unwrap();
+
+    serde_json::to_string(&instance.to_json().await).unwrap()
 }

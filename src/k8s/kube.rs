@@ -82,6 +82,14 @@ impl Kube {
                             "name": "epsilon-configuration"
                         }
                     }],
+                    "env": [{
+                        "name": "NAME",
+                        "valueFrom": {
+                            "fieldRef": {
+                                "fieldPath": "metadata.name"
+                            }
+                        }
+                    }],
                     "ports": [
                         {
                             "containerPort": port,
@@ -148,6 +156,10 @@ impl Kube {
         let pods = self.pods.list(&parameters).await?;
 
         Ok(pods.items)
+    }
+
+    pub async fn get_pod(&self, pod_name: &str) -> Result<Pod, Error> {
+        Ok(self.pods.get(pod_name).await?)
     }
 
     pub async fn patch_pod(&self, name: &str, patch: &Value) -> Result<(), Error> {

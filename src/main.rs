@@ -100,10 +100,10 @@ async fn main() -> EResult<()> {
             HubTask::init(&epsilon_api, &instance_provider, &queue_provider).await?,
             2000,
         )
-        .ignite_task(
-            CleanTask::init(&epsilon_api, &instance_provider, &queue_provider).await?,
-            10000,
-        )
+        // .ignite_task(
+        //     CleanTask::init(&epsilon_api, &instance_provider, &queue_provider).await?,
+        //     10000,
+        // )
         .ignite_task(
             QueueTask::init(&epsilon_api, &instance_provider, &queue_provider).await?,
             2000,
@@ -131,6 +131,7 @@ async fn main() -> EResult<()> {
                 epsilon::server::instance_provider::in_game,
                 epsilon::server::instance_provider::get,
                 epsilon::server::instance_provider::get_all
+                epsilon::server::instance_provider::get_from_name
             ],
         )
         .launch()
