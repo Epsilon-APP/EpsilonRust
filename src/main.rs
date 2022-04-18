@@ -130,7 +130,7 @@ async fn main() -> EResult<()> {
                 epsilon::server::instance_provider::close,
                 epsilon::server::instance_provider::in_game,
                 epsilon::server::instance_provider::get,
-                epsilon::server::instance_provider::get_all
+                epsilon::server::instance_provider::get_all,
                 epsilon::server::instance_provider::get_from_name
             ],
         )
