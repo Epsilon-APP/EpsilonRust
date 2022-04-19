@@ -23,6 +23,4 @@ WORKDIR /app
 
 COPY --from=build /epsilon/target/release/EpsilonRust .
 
-RUN ls EpsilonRust
-
-CMD ["while sleep 3600; do :; done"]
+CMD ["sleep 500000"]
