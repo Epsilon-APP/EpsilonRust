@@ -3,7 +3,6 @@ FROM rust:latest as build
 RUN USER=root cargo new --bin epsilon
 WORKDIR /epsilon
 
-COPY ./Cargo.lock ./Cargo.lock
 COPY ./Cargo.toml ./Cargo.toml
 
 RUN cargo build --release
