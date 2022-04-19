@@ -23,4 +23,4 @@ WORKDIR /app
 
 COPY --from=build /epsilon/target/release/EpsilonRust .
 
-CMD ["/bin/sh", "-ec", "sleep 100000"]
+CMD ["EpsilonRust"]
