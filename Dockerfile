@@ -1,26 +1,39 @@
-FROM rust:latest as build
+# ------------------------------------------------------------------------------
+# Cargo Build Stage
+# ------------------------------------------------------------------------------
 
-RUN USER=root cargo new --bin epsilon
+FROM rust:latest as cargo-build
+
+RUN apt-get update
+
+RUN apt-get install musl-tools -y
+
+RUN rustup target add x86_64-unknown-linux-musl
+
 WORKDIR /epsilon
 
-COPY ./Cargo.toml ./Cargo.toml
+COPY Cargo.toml Cargo.toml
 
-RUN cargo build --release
-RUN rm src/*.rs
+RUN mkdir src/
 
-COPY ./src ./src
+RUN echo "fn main() {}" > src/main.rs
 
-RUN rm ./target/release/deps/EpsilonRust*
-RUN cargo build --release
+RUN RUSTFLAGS=-Clinker=musl-gcc cargo build --release --target=x86_64-unknown-linux-musl
 
-#-------------------------------------------#
+RUN rm -f target/x86_64-unknown-linux-musl/release/deps/EpsilonRust*
 
-FROM debian:buster-slim
+COPY . .
 
-RUN apt-get update && apt-get install -y libssl-dev libc6
+RUN RUSTFLAGS=-Clinker=musl-gcc cargo build --release --target=x86_64-unknown-linux-musl
+
+# ------------------------------------------------------------------------------
+# Final Stage
+# ------------------------------------------------------------------------------
+
+FROM alpine:latest
 
 WORKDIR /app
 
-COPY --from=build /epsilon/target/release/EpsilonRust .
+COPY --from=cargo-build /epsilon/target/x86_64-unknown-linux-musl/release/EpsilonRust .
 
 CMD ["./EpsilonRust"]
