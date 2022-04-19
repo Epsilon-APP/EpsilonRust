@@ -15,7 +15,9 @@ RUN cargo build --release
 
 #-------------------------------------------#
 
-FROM debian:buster-slim
+FROM alpine:latest
+
+RUN RUN apk update && apk add ca-certificates libssl-dev
 
 WORKDIR /app
 
