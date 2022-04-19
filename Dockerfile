@@ -1,9 +1,19 @@
-FROM rust:latest
+FROM rust:latest as build
 
-WORKDIR /app
+WORKDIR /rust-build
 
 COPY ./ ./
 
 RUN cargo build
 
-CMD ["./target/debug/EpsilonRust"]
+# ------------------------------------------------------------------------------
+# Stage
+# ------------------------------------------------------------------------------
+
+FROM alpine:latest
+
+WORKDIR /app
+
+COPY --from=build rust-build/target/debug/EpsilonRust .
+
+CMD ["./EpsilonRust"]
