@@ -17,7 +17,7 @@ RUN cargo build --release
 
 FROM alpine:latest
 
-RUN RUN apk --no-cache update && apk --no-cache add openssl-dev
+RUN apk --no-cache update && apk --no-cache add openssl-dev
 
 WORKDIR /app
 
