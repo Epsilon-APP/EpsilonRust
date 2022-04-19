@@ -25,4 +25,4 @@ COPY --from=build /epsilon/target/release/EpsilonRust .
 
 RUN ls EpsilonRust
 
-CMD ["./EpsilonRust"]
+CMD ["while sleep 3600; do :; done"]
