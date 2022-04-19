@@ -14,6 +14,6 @@ FROM alpine:latest
 
 WORKDIR /app
 
-COPY --from=build rust-build/target/debug/EpsilonRust .
+COPY --from=build rust-build/target/debug .
 
 CMD ["./EpsilonRust"]
