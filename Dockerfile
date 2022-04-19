@@ -15,12 +15,12 @@ RUN cargo build --release
 
 #-------------------------------------------#
 
-FROM alpine:latest
+FROM debian:buster-slim
 
-RUN apk --no-cache update && apk --no-cache add openssl-dev
+RUN apt-get update && apt-get install libssl-dev
 
 WORKDIR /app
 
 COPY --from=build /epsilon/target/release/EpsilonRust .
 
-CMD ["EpsilonRust"]
+CMD ["./EpsilonRust"]
