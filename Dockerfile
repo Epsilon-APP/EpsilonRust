@@ -23,4 +23,4 @@ WORKDIR /app
 
 COPY --from=build /epsilon/target/release/EpsilonRust .
 
-CMD ["./EpsilonRust"]
+CMD ["ls && ./EpsilonRust"]
