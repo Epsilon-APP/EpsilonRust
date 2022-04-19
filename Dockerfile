@@ -10,7 +10,7 @@ RUN rm src/*.rs
 
 COPY ./src ./src
 
-RUN rm ./target/release/deps/epsilon*
+RUN rm ./target/release/deps/EpsilonRust*
 RUN cargo build --release
 
 #-------------------------------------------#
