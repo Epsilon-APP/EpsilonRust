@@ -23,6 +23,6 @@ WORKDIR /app
 
 COPY --from=build /epsilon/target/release/EpsilonRust .
 
-RUN ls
+RUN ls EpsilonRust
 
 CMD ["./EpsilonRust"]
