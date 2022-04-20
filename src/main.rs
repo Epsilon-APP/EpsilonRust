@@ -73,7 +73,7 @@ async fn main() -> EResult<()> {
     println!("{}", epsilon.replace("{}", env!("CARGO_PKG_VERSION")));
 
     let namespace =
-        fs::read_to_string("var/run/secrets/kubernetes.io/serviceaccount/namespace").unwrap();
+        fs::read_to_string("/var/run/secrets/kubernetes.io/serviceaccount/namespace").unwrap();
 
     info!("Kube listen in namespace: {}", namespace);
 
