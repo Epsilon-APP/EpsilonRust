@@ -6,7 +6,6 @@ use crate::epsilon::queue::queue_provider::QueueProvider;
 use crate::epsilon::server::instance_provider::InstanceProvider;
 use crate::epsilon::server::EResult;
 use crate::k8s::kube::Kube;
-use crate::tasks::clean_task::CleanTask;
 use crate::tasks::hub_task::HubTask;
 use crate::tasks::proxy_task::ProxyTask;
 use crate::tasks::queue_task::QueueTask;
@@ -15,9 +14,9 @@ use crate::tasks::task_builder::TaskBuilder;
 use env_logger::fmt::Color;
 use k8s_openapi::chrono::Local;
 use log::{Level, LevelFilter};
-use std::env;
 use std::io::Write;
 use std::sync::Arc;
+use std::{env, fs};
 
 mod epsilon;
 mod tasks;
@@ -73,7 +72,8 @@ async fn main() -> EResult<()> {
 
     println!("{}", epsilon.replace("{}", env!("CARGO_PKG_VERSION")));
 
-    let namespace = env::var("KUBE_NAMESPACE").unwrap();
+    let namespace =
+        fs::read_to_string("var/run/secrets/kubernetes.io/serviceaccount/namespace").unwrap();
 
     info!("Kube listen in namespace: {}", namespace);
 
@@ -100,10 +100,6 @@ async fn main() -> EResult<()> {
             HubTask::init(&epsilon_api, &instance_provider, &queue_provider).await?,
             2000,
         )
-        // .ignite_task(
-        //     CleanTask::init(&epsilon_api, &instance_provider, &queue_provider).await?,
-        //     10000,
-        // )
         .ignite_task(
             QueueTask::init(&epsilon_api, &instance_provider, &queue_provider).await?,
             2000,

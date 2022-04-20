@@ -82,14 +82,6 @@ impl Kube {
                             "name": "epsilon-configuration"
                         }
                     }],
-                    "env": [{
-                        "name": "NAME",
-                        "valueFrom": {
-                            "fieldRef": {
-                                "fieldPath": "metadata.name"
-                            }
-                        }
-                    }],
                     "ports": [
                         {
                             "containerPort": port,
