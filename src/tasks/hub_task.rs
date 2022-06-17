@@ -6,7 +6,6 @@ use crate::epsilon::server::templates::template::Template;
 use crate::{EResult, EpsilonApi, InstanceProvider, Task};
 use async_trait::async_trait;
 use std::sync::Arc;
-use std::time::Duration;
 use tokio::sync::Mutex;
 
 const DEFAULT_TIME: &'static u32 = &60;
