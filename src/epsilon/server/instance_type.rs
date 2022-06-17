@@ -10,10 +10,10 @@ pub enum InstanceType {
 }
 
 impl InstanceType {
-    pub fn get_associated_port(&self) -> u16 {
+    pub fn get_associated_ports(&self) -> Vec<u16> {
         match self {
-            InstanceType::Server => 25565,
-            InstanceType::Proxy => 25577,
+            InstanceType::Server => vec![25565],
+            InstanceType::Proxy => vec![25577, 9225],
         }
     }
 }

@@ -1,4 +1,5 @@
 use crate::k8s::label::Label;
+use std::collections::HashMap;
 use std::env;
 
 use k8s_openapi::api::core::v1::Pod;
@@ -12,6 +13,7 @@ use k8s_openapi::serde_json::{json, Value};
 use crate::epsilon::server::templates::resources::Resources;
 use kube::api::{DeleteParams, ListParams, Patch, PatchParams, PostParams};
 use kube::{Api, Client, Config, Error};
+use serde_json::Number;
 
 pub struct Kube {
     namespace: String,
@@ -44,12 +46,12 @@ impl Kube {
         &self,
         template: &str,
         labels_option: Option<&Vec<Label>>,
-        port: u16,
+        ports: Vec<u16>,
         resources: &Resources,
     ) -> Result<Pod, Error> {
         let default_label = Label::get_default_label();
 
-        let mut labels_map = serde_json::Map::new();
+        let mut labels_map = HashMap::new();
 
         let key_default = String::from(default_label.get_key());
         let value_default = String::from(default_label.get_value());
@@ -63,6 +65,17 @@ impl Kube {
 
                 labels_map.insert(key, Value::String(value));
             }
+        }
+
+        let mut ports_vec = Vec::new();
+
+        for port in ports {
+            let mut map = HashMap::new();
+
+            map.insert("containerPort", Value::Number(Number::from(port)));
+            map.insert("protocol", Value::String(String::from("TCP")));
+
+            ports_vec.push(map);
         }
 
         let pod = serde_json::from_value(json!({
@@ -82,12 +95,7 @@ impl Kube {
                             "name": "epsilon-configuration"
                         }
                     }],
-                    "ports": [
-                        {
-                            "containerPort": port,
-                            "protocol": "TCP"
-                        }
-                    ],
+                    "ports": ports_vec,
                     "resources": {
                         "requests": {
                             "cpu": format!("{}", resources.minimum.cpu),

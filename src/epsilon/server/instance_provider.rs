@@ -216,12 +216,7 @@ pub async fn get_all(instance_provider: &State<Arc<InstanceProvider>>) -> String
 
     for instance in instances {
         let json = instance.to_json().await;
-
-        info!("JSON");
-
         json_array.push(json);
-
-        info!("PUSH")
     }
 
     info!("Converted {} instances to json", json_array.len());

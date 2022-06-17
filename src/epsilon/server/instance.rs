@@ -39,10 +39,10 @@ impl Instance {
 
         let labels = vec![instance_label, template_label, slots_label];
 
-        let port = instance_type.get_associated_port();
+        let ports = instance_type.get_associated_ports();
 
         let pod = kube
-            .create_epsilon_pod(template_name, Some(&labels), port, resources)
+            .create_epsilon_pod(template_name, Some(&labels), ports, resources)
             .await?;
 
         Ok(Self { pod })
@@ -128,39 +128,17 @@ impl Instance {
 
     pub fn get_state(&self) -> EpsilonState {
         let status = self.pod.status.as_ref().unwrap();
-
-        info!("1");
-
         let metadata = &self.pod.metadata;
-
-        info!("2");
-
         let labels = metadata.labels.as_ref().unwrap();
-
-        info!("3");
-
         let conditions = status.conditions.as_ref().unwrap();
-
-        info!("4");
-
         let is_ready = conditions
             .iter()
             .any(|condition| condition.type_ == "Ready" && condition.status == "True")
             && status.phase.as_ref().unwrap() == "Running";
 
-        info!("5");
-
         let label = &labels.get(Label::IN_GAME_LABEL);
-
-        info!("6");
-
         let is_in_game = label.is_some() && label.unwrap() == "true";
-
-        info!("7");
-
         let is_stopping = metadata.deletion_timestamp.is_some() || self.is_succeeded();
-
-        info!("8");
 
         if is_ready && is_in_game {
             EpsilonState::InGame
