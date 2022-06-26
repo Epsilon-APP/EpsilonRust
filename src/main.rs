@@ -27,19 +27,18 @@ mod k8s;
 async fn main() -> EResult<()> {
     std::env::set_var(
         "RUST_LOG",
-        "EpsilonRust=info, EpsilonRust=error, EpsilonRust=debug",
+        "epsilon=info, epsilon=error, epsilon=debug, rocket=info",
     );
 
-    std::env::set_var("RUST_BACKTRACE", "1");
-
     env_logger::Builder::new()
+        .parse_default_env()
         .format(|buf, record| {
             let mut style = buf.style();
 
             match record.level() {
                 Level::Error => style.set_color(Color::Red).set_bold(true),
-
                 Level::Warn => style.set_color(Color::Yellow).set_bold(true),
+                Level::Info => style.set_color(Color::Blue).set_bold(true),
 
                 _ => style.set_color(Color::White).set_bold(true),
             };
@@ -52,7 +51,6 @@ async fn main() -> EResult<()> {
                 style.value(record.args())
             )
         })
-        .filter(None, LevelFilter::Info)
         .init();
 
     let epsilon = concat!(
@@ -66,16 +64,20 @@ async fn main() -> EResult<()> {
         "│        | |                           │\n",
         "│        |_|                           │\n",
         "├──────────────────────────────────────┤\n",
-        "│        Started Version: {}        │\n",
-        "└──────────────────────────────────────┘\n"
+        "────────────────────────────────────────\n",
     );
 
-    println!("{}", epsilon.replace("{}", env!("CARGO_PKG_VERSION")));
+    println!("{}", epsilon);
+
+    info!(
+        "Version : {}",
+        epsilon.replace("{}", env!("CARGO_PKG_VERSION"))
+    );
 
     let namespace =
         fs::read_to_string("/var/run/secrets/kubernetes.io/serviceaccount/namespace").unwrap();
 
-    info!("Kube listen in namespace: {}", namespace);
+    info!("Epsilon listen in namespace: {}", namespace);
 
     let kube = Kube::new(&namespace).await;
 
@@ -107,7 +109,9 @@ async fn main() -> EResult<()> {
 
     info!("Tasks have been started");
 
-    let figment = rocket::config::Config::figment().merge(("address", "0.0.0.0"));
+    let figment = rocket::config::Config::figment()
+        .merge(("ident", "Epsilon"))
+        .merge(("address", "0.0.0.0"));
 
     rocket::custom(figment)
         .manage(Arc::clone(&epsilon_api))

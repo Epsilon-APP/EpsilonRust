@@ -72,11 +72,7 @@ impl Task for QueueTask {
                                 let group_size = group.players.len() as i32;
 
                                 if group_size <= available_slots {
-                                    info!("Sending group ({})", available_slots);
-
                                     available_slots -= group_size;
-
-                                    info!("New sending group ({})", available_slots);
 
                                     self.epsilon_api.send(SendToServer(
                                         group,
