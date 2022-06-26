@@ -23,7 +23,7 @@ impl EpsilonApi {
     }
 }
 
-#[rocket::post("/ping")]
+#[rocket::get("/ping")]
 pub async fn ping() -> &'static str {
     "Pong"
 }
