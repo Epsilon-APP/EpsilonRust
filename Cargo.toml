@@ -1,5 +1,5 @@
 [package]
-name = "EpsilonRust"
+name = "epsilon"
 version = "1.0.0-alpha"
 edition = "2021"
 
