@@ -93,6 +93,9 @@ impl Kube {
                     "envFrom": [{
                         "configMapRef": {
                             "name": "epsilon-configuration"
+                        },
+                        "configMapRef": {
+                            "name": "epsilon-configuration-instance"
                         }
                     }],
                     "ports": ports_vec,
