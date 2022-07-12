@@ -1,7 +1,7 @@
 use crate::Task;
 use std::time::Duration;
 
-pub struct TaskBuilder {}
+pub struct TaskBuilder;
 
 impl TaskBuilder {
     pub fn new() -> Self {

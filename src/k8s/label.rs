@@ -1,4 +1,5 @@
 use crate::epsilon::server::instances::common::instance_type::InstanceType;
+use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
 
 pub struct Label {
@@ -49,21 +50,21 @@ impl Label {
     }
 
     pub fn get_instance_type_label(instance_type: &InstanceType) -> Label {
-        Label::new(Label::INSTANCE_TYPE_LABEL, &instance_type.to_string())
+        Label::new(Self::INSTANCE_TYPE_LABEL, &instance_type.to_string())
     }
 
     pub fn get_template_label(template_name: &str) -> Label {
-        Label::new(Label::TEMPLATE_LABEL, template_name)
+        Label::new(Self::TEMPLATE_LABEL, template_name)
     }
 
     pub fn get_slots_label(slots: i32) -> Label {
-        Label::new(Label::SLOTS_LABEL, slots.to_string().as_str())
+        Label::new(Self::SLOTS_LABEL, slots.to_string().as_str())
     }
 
     pub fn get_in_game_label(enable: bool) -> Label {
         let str = if enable { "true" } else { "false" };
 
-        Label::new(Label::IN_GAME_LABEL, str)
+        Label::new(Self::IN_GAME_LABEL, str)
     }
 }
 
