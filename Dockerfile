@@ -6,9 +6,9 @@ WORKDIR /app
 
 COPY ./ ./
 
-RUN cargo build
+RUN cargo build --release
 
 RUN rm -r ./src
 RUN rm Cargo.lock Cargo.toml
 
-CMD ["./target/debug/epsilon"]
+CMD ["./target/release/epsilon"]
