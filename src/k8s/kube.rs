@@ -12,6 +12,7 @@ use k8s_openapi::serde_json::{json, Value};
 
 use crate::epsilon::server::templates::resources::Resources;
 use kube::api::{DeleteParams, ListParams, Patch, PatchParams, PostParams};
+use kube::runtime::finalizer::Event;
 use kube::{Api, Client, Config, Error};
 use serde_json::Number;
 
@@ -46,7 +47,7 @@ impl Kube {
         &self,
         template: &str,
         labels_option: Option<&Vec<Label>>,
-        ports: Vec<u16>,
+        ports: Vec<(&str, u16)>,
         resources: &Resources,
     ) -> Result<Pod, Error> {
         let default_label = Label::get_default_label();
@@ -69,9 +70,10 @@ impl Kube {
 
         let mut ports_vec = Vec::new();
 
-        for port in ports {
+        for (name, port) in ports {
             let mut map = HashMap::new();
 
+            map.insert("name", Value::String(String::from(name)));
             map.insert("containerPort", Value::Number(Number::from(port)));
             map.insert("protocol", Value::String(String::from("TCP")));
 
