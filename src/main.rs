@@ -1,10 +1,11 @@
 #[macro_use]
 extern crate log;
 
+use crate::context::Context;
 use crate::epsilon::api::epsilon_api::EpsilonApi;
 use crate::epsilon::queue::queue_provider::QueueProvider;
-use crate::epsilon::server::instance_provider::InstanceProvider;
-use crate::epsilon::server::EResult;
+use crate::epsilon::server::instances::instance_provider::InstanceProvider;
+use crate::epsilon::server::instances::EResult;
 use crate::k8s::kube::Kube;
 use crate::tasks::hub_task::HubTask;
 use crate::tasks::proxy_task::ProxyTask;
@@ -19,9 +20,11 @@ use std::sync::Arc;
 use std::{env, fs};
 
 mod epsilon;
+mod k8s;
 mod tasks;
 
-mod k8s;
+mod config;
+mod context;
 
 #[tokio::main]
 async fn main() -> EResult<()> {
@@ -91,21 +94,14 @@ async fn main() -> EResult<()> {
     let instance_provider = InstanceProvider::new(&kube);
     let queue_provider = QueueProvider::new(&instance_provider).await?;
 
+    let context = Context::new(epsilon_api, instance_provider, queue_provider);
+
     info!("Instance provider has been started");
 
     TaskBuilder::new()
-        .ignite_task(
-            ProxyTask::init(&epsilon_api, &instance_provider, &queue_provider).await?,
-            6000,
-        )
-        .ignite_task(
-            HubTask::init(&epsilon_api, &instance_provider, &queue_provider).await?,
-            2000,
-        )
-        .ignite_task(
-            QueueTask::init(&epsilon_api, &instance_provider, &queue_provider).await?,
-            2000,
-        );
+        .ignite_task(ProxyTask::init(Arc::clone(&context)).await?, 6000)
+        .ignite_task(HubTask::init(Arc::clone(&context)).await?, 2000)
+        .ignite_task(QueueTask::init(Arc::clone(&context)).await?, 2000);
 
     info!("Tasks have been started");
 
@@ -114,24 +110,19 @@ async fn main() -> EResult<()> {
         .merge(("address", "0.0.0.0"));
 
     rocket::custom(figment)
-        .manage(Arc::clone(&epsilon_api))
-        .manage(Arc::clone(&instance_provider))
-        .manage(Arc::clone(&queue_provider))
-        .mount("/", rocket::routes![epsilon::api::epsilon_api::ping])
-        .mount("/api", rocket::routes![epsilon::api::epsilon_api::events])
-        .mount(
-            "/queue",
-            rocket::routes![epsilon::queue::queue_provider::push],
-        )
+        .manage(Arc::clone(&context))
+        .mount("/", rocket::routes![epsilon::api::routes::ping])
+        .mount("/api", rocket::routes![epsilon::api::routes::events])
+        .mount("/queue", rocket::routes![epsilon::queue::routes::push])
         .mount(
             "/instance",
             rocket::routes![
-                epsilon::server::instance_provider::create,
-                epsilon::server::instance_provider::close,
-                epsilon::server::instance_provider::in_game,
-                epsilon::server::instance_provider::get,
-                epsilon::server::instance_provider::get_all,
-                epsilon::server::instance_provider::get_from_name
+                epsilon::server::instances::routes::create,
+                epsilon::server::instances::routes::close,
+                epsilon::server::instances::routes::in_game,
+                epsilon::server::instances::routes::get,
+                epsilon::server::instances::routes::get_all,
+                epsilon::server::instances::routes::get_from_name
             ],
         )
         .launch()

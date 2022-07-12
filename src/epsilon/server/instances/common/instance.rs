@@ -1,17 +1,16 @@
 use async_trait::async_trait;
 
-use crate::epsilon::server::instance_type::InstanceType;
+use crate::epsilon::server::instances::common::instance_type::InstanceType;
+use crate::epsilon::server::instances::common::state::EpsilonState;
+use crate::epsilon::server::templates::template::Template;
 use crate::k8s::label::Label;
 use crate::{EResult, Kube};
 use anyhow::format_err;
 use async_minecraft_ping::{ConnectionConfig, StatusResponse};
 use k8s_openapi::api::core::v1::Pod;
+use serde::Serialize;
 use std::sync::Arc;
 use std::time::Duration;
-
-use crate::epsilon::server::state::EpsilonState;
-use crate::epsilon::server::templates::template::Template;
-use serde::Serialize;
 
 pub struct Instance {
     pod: Pod,

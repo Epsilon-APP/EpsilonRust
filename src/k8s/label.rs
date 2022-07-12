@@ -1,4 +1,4 @@
-use crate::epsilon::server::instance_type::InstanceType;
+use crate::epsilon::server::instances::common::instance_type::InstanceType;
 use std::fmt::{Display, Formatter};
 
 pub struct Label {

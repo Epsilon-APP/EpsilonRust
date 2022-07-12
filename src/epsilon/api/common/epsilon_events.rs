@@ -1,6 +1,6 @@
-use crate::epsilon::queue::queue_provider::Group;
+use crate::epsilon::queue::common::group::Group;
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub enum EpsilonEvent {
     SendToServer(Group, String),
 }

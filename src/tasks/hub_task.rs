@@ -1,42 +1,38 @@
-use crate::epsilon::queue::queue_provider::QueueProvider;
-use crate::epsilon::server::instance::VectorOfInstance;
-use crate::epsilon::server::instance_type::InstanceType;
-use crate::epsilon::server::state::EpsilonState;
+use crate::epsilon::server::instances::common::instance::VectorOfInstance;
+use crate::epsilon::server::instances::common::instance_type::InstanceType;
+use crate::epsilon::server::instances::common::state::EpsilonState;
 use crate::epsilon::server::templates::template::Template;
-use crate::{EResult, EpsilonApi, InstanceProvider, Task};
+use crate::{Context, EResult, Task};
 use async_trait::async_trait;
 use std::sync::Arc;
-use tokio::sync::Mutex;
 
-const DEFAULT_TIME: &'static u32 = &60;
+const DEFAULT_TIME: &u32 = &60;
 
 pub struct HubTask {
-    instance_provider: Arc<InstanceProvider>,
-    hub_template: Template,
+    context: Arc<Context>,
 
+    hub_template: Template,
     time: u32,
 }
 
 #[async_trait]
 impl Task for HubTask {
-    async fn init(
-        _epsilon_api: &Arc<EpsilonApi>,
-        instance_provider: &Arc<InstanceProvider>,
-        _queue_provider: &Arc<Mutex<QueueProvider>>,
-    ) -> EResult<Box<dyn Task>> {
+    async fn init(context: Arc<Context>) -> EResult<Box<dyn Task>> {
+        let hub_template = context.get_instance_provider().get_template("hub").await?;
+
         Ok(Box::new(Self {
-            instance_provider: Arc::clone(instance_provider),
-            hub_template: instance_provider.get_template("hub").await?,
+            context,
+            hub_template,
 
             time: 0,
         }))
     }
 
     async fn run(&mut self) -> EResult<()> {
+        let instance_provider = self.context.get_instance_provider();
         let template_name = &self.hub_template.name;
 
-        let proxies = self
-            .instance_provider
+        let proxies = instance_provider
             .get_instances(
                 &InstanceType::Proxy,
                 None,
@@ -48,8 +44,7 @@ impl Task for HubTask {
         let proxy_number = proxies.len();
 
         if proxy_number > 0 {
-            let hubs_starting = self
-                .instance_provider
+            let hubs_starting = instance_provider
                 .get_instances(
                     &InstanceType::Server,
                     Some(template_name),
@@ -59,8 +54,7 @@ impl Task for HubTask {
                 .await?;
 
             if hubs_starting.is_empty() {
-                let hubs_ready = self
-                    .instance_provider
+                let hubs_ready = instance_provider
                     .get_instances(
                         &InstanceType::Server,
                         Some(template_name),
@@ -76,7 +70,7 @@ impl Task for HubTask {
                     ((hub_online_count as f32 * 1.6 / self.hub_template.slots as f32) + 1.0) as u32;
 
                 if hub_number < hub_necessary {
-                    self.instance_provider.start_instance(template_name).await?;
+                    instance_provider.start_instance(template_name).await?;
                 }
 
                 if hub_number > hub_necessary {
@@ -105,7 +99,7 @@ impl Task for HubTask {
                     if let Some(hub) = hub_option {
                         let name = hub.get_name();
 
-                        self.instance_provider.remove_instance(name).await?;
+                        instance_provider.remove_instance(name).await?;
 
                         info!("Hub {} is removed with {} online players", name, n);
                     }

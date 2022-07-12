@@ -1,5 +1,4 @@
-use crate::epsilon::queue::queue_provider::Group;
-
+use crate::epsilon::queue::common::group::Group;
 use std::collections::{HashSet, VecDeque};
 
 pub struct Queue {

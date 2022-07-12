@@ -1,10 +1,8 @@
+use crate::epsilon::server::instances::common::instance_type::InstanceType;
+use crate::epsilon::server::templates::resources::Resources;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
-
-use serde::{Deserialize, Serialize};
-
-use crate::epsilon::server::instance_type::InstanceType;
-use crate::epsilon::server::templates::resources::Resources;
 
 #[derive(Serialize, Deserialize)]
 pub struct Template {
