@@ -18,7 +18,7 @@ pub struct HubTask {
 #[async_trait]
 impl Task for HubTask {
     async fn init(context: Arc<Context>) -> EResult<Box<dyn Task>> {
-        let hub_template = context.get_instance_provider().get_template("hub").await?;
+        let hub_template = context.get_template_provider().get_hub_template().await?;
 
         Ok(Box::new(Self {
             context,

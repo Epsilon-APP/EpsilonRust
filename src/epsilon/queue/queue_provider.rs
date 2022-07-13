@@ -1,6 +1,7 @@
 use crate::epsilon::queue::common::epsilon_queue::Queue;
-use crate::{EResult, InstanceProvider};
+use crate::{EResult, InstanceProvider, TemplateProvider};
 use std::collections::HashMap;
+use std::sync::Arc;
 use tokio::sync::RwLock;
 
 pub struct QueueProvider {
@@ -8,10 +9,13 @@ pub struct QueueProvider {
 }
 
 impl QueueProvider {
-    pub async fn new(instance_provider: &InstanceProvider) -> EResult<QueueProvider> {
+    pub async fn new(
+        instance_provider: &InstanceProvider,
+        template_provider: &Arc<TemplateProvider>,
+    ) -> EResult<QueueProvider> {
         let mut map = HashMap::new();
 
-        for template in instance_provider.get_templates().await? {
+        for template in template_provider.get_templates().await? {
             map.insert(String::from(&template.name), RwLock::new(Queue::new()));
         }
 

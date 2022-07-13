@@ -3,7 +3,7 @@ use crate::epsilon::server::instances::common::instance_type::InstanceType;
 use crate::epsilon::server::instances::common::state::EpsilonState;
 use crate::epsilon::server::templates::template::Template;
 use crate::k8s::label::Label;
-use crate::{EResult, Kube};
+use crate::{EResult, Kube, TemplateProvider};
 use anyhow::format_err;
 use serde_json::json;
 use std::env;
@@ -11,19 +11,21 @@ use std::sync::Arc;
 
 pub struct InstanceProvider {
     kube: Arc<Kube>,
+    template_provider: Arc<TemplateProvider>,
 }
 
 impl InstanceProvider {
-    pub fn new(kube: &Arc<Kube>) -> InstanceProvider {
+    pub fn new(kube: &Arc<Kube>, template_provider: &Arc<TemplateProvider>) -> InstanceProvider {
         Self {
             kube: Arc::clone(kube),
+            template_provider: Arc::clone(template_provider),
         }
     }
 
     pub async fn start_instance(&self, template_name: &str) -> EResult<Instance> {
-        let template = &self.get_template(template_name).await?;
+        let template = self.template_provider.get_template(template_name).await?;
 
-        let instance = Instance::new(&self.kube, template).await?;
+        let instance = Instance::new(&self.kube, &template).await?;
 
         info!(
             "An instance [{}] has been created (template={}, type={})",

@@ -1,11 +1,13 @@
 #[macro_use]
 extern crate log;
 
+use crate::config::EpsilonConfig;
 use crate::context::Context;
 use crate::epsilon::api::epsilon_api::EpsilonApi;
 use crate::epsilon::queue::queue_provider::QueueProvider;
 use crate::epsilon::server::instances::instance_provider::InstanceProvider;
 use crate::epsilon::server::instances::EResult;
+use crate::epsilon::server::templates::template_provider::TemplateProvider;
 use crate::k8s::kube::Kube;
 use crate::tasks::hub_task::HubTask;
 use crate::tasks::proxy_task::ProxyTask;
@@ -90,11 +92,20 @@ async fn main() -> EResult<()> {
         kube.get_info().git_version
     );
 
-    let epsilon_api = EpsilonApi::new();
-    let instance_provider = InstanceProvider::new(&kube);
-    let queue_provider = QueueProvider::new(&instance_provider).await?;
+    let config = EpsilonConfig::load("./config.json");
 
-    let context = Context::new(epsilon_api, instance_provider, queue_provider);
+    let epsilon_api = EpsilonApi::new();
+
+    let template_provider = TemplateProvider::new(&config);
+    let instance_provider = InstanceProvider::new(&kube, &template_provider);
+    let queue_provider = QueueProvider::new(&instance_provider, &template_provider).await?;
+
+    let context = Context::new(
+        epsilon_api,
+        template_provider,
+        instance_provider,
+        queue_provider,
+    );
 
     info!("Instance provider has been started");
 

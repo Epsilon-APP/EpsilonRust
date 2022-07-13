@@ -1,27 +1,36 @@
 use crate::epsilon::server::templates::template::Template;
-use crate::EResult;
+use crate::{EResult, EpsilonConfig};
 use anyhow::format_err;
 use std::env;
+use std::sync::Arc;
 
-struct TemplateProvider;
+pub struct TemplateProvider {
+    config: Arc<EpsilonConfig>,
+}
 
 impl TemplateProvider {
-    pub fn new() -> TemplateProvider {
-        TemplateProvider
+    pub fn new(config: &Arc<EpsilonConfig>) -> Arc<TemplateProvider> {
+        Arc::new(Self {
+            config: Arc::clone(config),
+        })
     }
 
-    pub async fn get_template_host(&self, route: &str) -> String {
-        format!(
-            "http://{}:8000/{}",
-            env::var("HOST_TEMPLATE").unwrap(),
-            route
-        )
+    #[inline]
+    pub async fn get_proxy_template(&self) -> EResult<Template> {
+        let proxy_template = &self.config.proxy.template;
+
+        self.get_template(proxy_template).await
+    }
+
+    #[inline]
+    pub async fn get_hub_template(&self) -> EResult<Template> {
+        let hub_template = &self.config.hub.template;
+
+        self.get_template(hub_template).await
     }
 
     pub async fn get_template(&self, template_name: &str) -> EResult<Template> {
-        let url = self
-            .get_template_host(&format!("templates/{}", template_name))
-            .await;
+        let url = self.get_template_host(&format!("templates/{}", template_name));
 
         debug!("Fetching template from {}", url);
 
@@ -37,7 +46,7 @@ impl TemplateProvider {
     }
 
     pub async fn get_templates(&self) -> EResult<Vec<Template>> {
-        let url = self.get_template_host("templates").await;
+        let url = self.get_template_host("templates");
 
         debug!("Fetching template list from {}", url);
 
@@ -50,5 +59,14 @@ impl TemplateProvider {
         } else {
             Err(format_err!("Failed to fetch template list from {}", url))
         }
+    }
+
+    #[inline]
+    fn get_template_host(&self, route: &str) -> String {
+        format!(
+            "http://{}:8000/{}",
+            env::var("HOST_TEMPLATE").unwrap(),
+            route
+        )
     }
 }
