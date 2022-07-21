@@ -1,5 +1,5 @@
+use crate::controller::definitions::epsilon_instance::VectorOfInstance;
 use crate::epsilon::api::common::epsilon_events::EpsilonEvent::SendToServer;
-use crate::epsilon::server::instances::common::instance::VectorOfInstance;
 use crate::epsilon::server::instances::common::instance_type::InstanceType;
 use crate::epsilon::server::instances::common::state::EpsilonState;
 use crate::{Context, EResult, Task};
@@ -53,7 +53,7 @@ impl Task for QueueTask {
                     }
                 }
 
-                for instance in instances_ready {
+                for instance in &instances_ready {
                     if let Ok(mut available_slots) = instance.get_available_slots().await {
                         while !queue.read().await.is_empty() && available_slots > 0 {
                             if let Some(group) = queue.write().await.pop() {
@@ -64,7 +64,7 @@ impl Task for QueueTask {
 
                                     epsilon_api.send(SendToServer(
                                         group,
-                                        String::from(instance.get_name()),
+                                        instance.metadata.name.as_ref().unwrap().clone(),
                                     ));
                                 }
                             }

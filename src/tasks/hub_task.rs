@@ -1,4 +1,4 @@
-use crate::epsilon::server::instances::common::instance::VectorOfInstance;
+use crate::controller::definitions::epsilon_instance::VectorOfInstance;
 use crate::epsilon::server::instances::common::instance_type::InstanceType;
 use crate::epsilon::server::instances::common::state::EpsilonState;
 use crate::epsilon::server::templates::template::Template;
@@ -63,45 +63,48 @@ impl Task for HubTask {
                     )
                     .await?;
 
-                let hub_online_count = hubs_ready.get_online_count().await;
-                let hub_number = hubs_ready.len() as u32;
+                if let Ok(hub_online_count) = hubs_ready.get_online_count().await {
+                    let hub_number = hubs_ready.len() as u32;
+                    let hub_necessary = ((hub_online_count as f32 * 1.6
+                        / self.hub_template.slots as f32)
+                        + 1.0) as u32;
 
-                let hub_necessary =
-                    ((hub_online_count as f32 * 1.6 / self.hub_template.slots as f32) + 1.0) as u32;
-
-                if hub_number < hub_necessary {
-                    instance_provider.start_instance(template_name).await?;
-                }
-
-                if hub_number > hub_necessary {
-                    if self.time != *DEFAULT_TIME {
-                        self.time += 1;
-
-                        return Ok(());
-                    } else {
-                        self.time = 0;
+                    if hub_number < hub_necessary {
+                        instance_provider.start_instance(template_name).await?;
                     }
 
-                    let mut n = 0;
-                    let mut hub_option = None;
+                    if hub_number > hub_necessary {
+                        if self.time != *DEFAULT_TIME {
+                            self.time += 1;
 
-                    for instance in hubs_ready {
-                        let online_player_result = instance.get_online_count().await;
+                            return Ok(());
+                        } else {
+                            self.time = 0;
+                        }
 
-                        if let Ok(online_player) = online_player_result {
-                            if instance.get_state() == EpsilonState::Running && online_player <= n {
-                                n = online_player;
-                                hub_option = Some(instance);
-                            }
-                        };
-                    }
+                        let mut n = 0;
+                        let mut hub_option = None;
 
-                    if let Some(hub) = hub_option {
-                        let name = hub.get_name();
+                        for instance in hubs_ready {
+                            let online_player_result = instance.get_online_count().await;
 
-                        instance_provider.remove_instance(name).await?;
+                            if let Ok(online_player) = online_player_result {
+                                if instance.status.as_ref().unwrap().state == EpsilonState::Running
+                                    && online_player <= n
+                                {
+                                    n = online_player;
+                                    hub_option = Some(instance);
+                                }
+                            };
+                        }
 
-                        info!("Hub {} is removed with {} online players", name, n);
+                        if let Some(hub) = hub_option {
+                            let name = hub.metadata.name.as_ref().unwrap();
+
+                            instance_provider.remove_instance(&name).await?;
+
+                            info!("Hub {} is removed with {} online players", name, n);
+                        }
                     }
                 }
             }

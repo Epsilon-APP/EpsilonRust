@@ -1,0 +1,39 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: epsilonqueues.controller.epsilon.fr
+spec:
+  group: controller.epsilon.fr
+  names:
+    categories: []
+    kind: EpsilonQueue
+    plural: epsilonqueues
+    shortNames: []
+    singular: epsilonqueue
+  scope: Namespaced
+  versions:
+    - additionalPrinterColumns:
+        - description: Template name target of queue
+          jsonPath: ".spec.target"
+          name: Target
+          type: string
+      name: v1
+      schema:
+        openAPIV3Schema:
+          description: "Auto-generated derived type for EpsilonQueueSpec via `CustomResource`"
+          properties:
+            spec:
+              properties:
+                target:
+                  type: string
+              required:
+                - target
+              type: object
+          required:
+            - spec
+          title: EpsilonQueue
+          type: object
+      served: true
+      storage: true
+      subresources: {}

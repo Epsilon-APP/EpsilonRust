@@ -1,18 +1,38 @@
+use k8s_openapi::api::core::v1::ContainerPort;
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::io;
 use std::str::FromStr;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone, JsonSchema)]
 pub enum InstanceType {
     Server,
     Proxy,
 }
 
 impl InstanceType {
-    pub fn get_associated_ports(&self) -> Vec<(&str, u16)> {
+    pub fn get_associated_ports(&self) -> Vec<ContainerPort> {
         match self {
-            InstanceType::Server => vec![("server", 25565), ("metrics", 9090)],
-            InstanceType::Proxy => vec![("proxy", 25577), ("metrics", 9090)],
+            InstanceType::Server => vec![ContainerPort {
+                container_port: 25565,
+                name: Some(String::from("server")),
+                protocol: Some(String::from("TCP")),
+                ..Default::default()
+            }],
+            InstanceType::Proxy => vec![
+                ContainerPort {
+                    container_port: 25577,
+                    name: Some(String::from("proxy")),
+                    protocol: Some(String::from("TCP")),
+                    ..Default::default()
+                },
+                ContainerPort {
+                    container_port: 9090,
+                    name: Some(String::from("metrics")),
+                    protocol: Some(String::from("TCP")),
+                    ..Default::default()
+                },
+            ],
         }
     }
 }

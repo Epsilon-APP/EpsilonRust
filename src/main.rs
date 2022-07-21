@@ -3,6 +3,9 @@ extern crate log;
 
 use crate::config::EpsilonConfig;
 use crate::context::Context;
+use crate::controller::definitions::epsilon_instance::EpsilonInstance;
+use crate::controller::definitions::epsilon_queue::EpsilonQueue;
+use crate::controller::epsilon_controller::EpsilonController;
 use crate::epsilon::api::epsilon_api::EpsilonApi;
 use crate::epsilon::queue::queue_provider::QueueProvider;
 use crate::epsilon::server::instances::instance_provider::InstanceProvider;
@@ -16,23 +19,42 @@ use crate::tasks::task::Task;
 use crate::tasks::task_builder::TaskBuilder;
 use env_logger::fmt::Color;
 use k8s_openapi::chrono::Local;
+use kube::CustomResourceExt;
 use log::{Level, LevelFilter};
 use std::io::Write;
 use std::sync::Arc;
 use std::{env, fs};
 
-mod epsilon;
-mod k8s;
-mod tasks;
+pub mod controller;
 
-mod config;
-mod context;
+pub mod epsilon;
+pub mod k8s;
+pub mod tasks;
+
+pub mod config;
+pub mod context;
 
 #[tokio::main]
 async fn main() -> EResult<()> {
+    let path_name = "./resources";
+
+    fs::create_dir(path_name).ok();
+
+    fs::write(
+        format!("{}/{}", path_name, "epsilon_instance-definition.yaml"),
+        serde_yaml::to_string(&EpsilonInstance::crd()).unwrap(),
+    )
+    .unwrap();
+
+    fs::write(
+        format!("{}/{}", path_name, "epsilon_queue-definition.yaml"),
+        serde_yaml::to_string(&EpsilonQueue::crd()).unwrap(),
+    )
+    .unwrap();
+
     std::env::set_var(
         "RUST_LOG",
-        "epsilon=info, epsilon=error, epsilon=debug, rocket=info",
+        "epsilon=info, epsilon=error, epsilon=debug, epsilon=trace, rocket=info",
     );
 
     env_logger::Builder::new()
@@ -74,10 +96,7 @@ async fn main() -> EResult<()> {
 
     println!("{}", epsilon);
 
-    info!(
-        "Version : {}",
-        epsilon.replace("{}", env!("CARGO_PKG_VERSION"))
-    );
+    info!("Version : {}", env!("CARGO_PKG_VERSION"));
 
     let namespace =
         fs::read_to_string("/var/run/secrets/kubernetes.io/serviceaccount/namespace").unwrap();
@@ -97,7 +116,11 @@ async fn main() -> EResult<()> {
     let epsilon_api = EpsilonApi::new();
 
     let template_provider = TemplateProvider::new(&config);
-    let instance_provider = InstanceProvider::new(&kube, &template_provider);
+
+    let controller = EpsilonController::new(&namespace, &template_provider).await;
+
+    let instance_provider = InstanceProvider::new(&controller, &template_provider);
+
     let queue_provider = QueueProvider::new(&instance_provider, &template_provider).await?;
 
     let context = Context::new(

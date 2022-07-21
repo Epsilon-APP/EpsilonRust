@@ -12,6 +12,8 @@ pub struct ProxyTask {
 #[async_trait]
 impl Task for ProxyTask {
     async fn init(context: Arc<Context>) -> EResult<Box<dyn Task>> {
+        info!("proxy");
+
         let proxy_template = context.get_template_provider().get_proxy_template().await?;
 
         Ok(Box::new(Self {
