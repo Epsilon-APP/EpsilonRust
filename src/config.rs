@@ -24,7 +24,7 @@ impl Default for EpsilonConfig {
     fn default() -> Self {
         Self {
             proxy: ProxyConfig {
-                template: String::from("proxy"),
+                template: String::from("waterfall"),
                 minimum_proxies: 1,
             },
             hub: HubConfig {

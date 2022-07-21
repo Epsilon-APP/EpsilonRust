@@ -103,14 +103,6 @@ async fn main() -> EResult<()> {
 
     info!("Epsilon listen in namespace: {}", namespace);
 
-    let kube = Kube::new(&namespace).await;
-
-    info!(
-        "Kube client has been started (Namespace={}, Version={})",
-        kube.get_namespace(),
-        kube.get_info().git_version
-    );
-
     let config = EpsilonConfig::load("./config.json");
 
     let epsilon_api = EpsilonApi::new();
