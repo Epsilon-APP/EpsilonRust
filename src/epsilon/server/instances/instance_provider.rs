@@ -72,21 +72,33 @@ impl InstanceProvider {
                 self.epsilon_controller.get_epsilon_instance_api().clone(),
                 instance.metadata.name.as_ref().unwrap(),
                 move |object: Option<&EpsilonInstance>| {
-                    if let Some(instance) = object {
-                        return instance.status.is_some();
-                    }
-                    false
+                    object.map_or(false, |instance| {
+                        info!(
+                            "Instance status ({}) : {}",
+                            instance.metadata.name.as_ref().unwrap(),
+                            instance.status.is_some()
+                        );
+
+                        instance.status.is_some()
+                    })
                 },
             );
 
-            let _ = tokio::time::timeout(std::time::Duration::from_secs(3), condition).await?;
+            let _ = tokio::time::timeout(std::time::Duration::from_secs(10), condition).await?;
+            info!("After timeout");
+        }
+
+        for instance in &instances {
+            info!(
+                "Instance ({}) : {}",
+                instance.metadata.name.as_ref().unwrap(),
+                instance.status.is_some()
+            );
         }
 
         instances = instances
             .into_iter()
-            .filter(|instance| {
-                instance.status.is_none() || instance.status.as_ref().unwrap().t == *instance_type
-            })
+            .filter(|instance| instance.status.as_ref().unwrap().t == *instance_type)
             .collect();
 
         if let Some(template_name) = template_option {
@@ -99,9 +111,7 @@ impl InstanceProvider {
         if let Some(state) = state_option {
             instances = instances
                 .into_iter()
-                .filter(|instance| {
-                    instance.status.is_none() || instance.status.as_ref().unwrap().state == *state
-                })
+                .filter(|instance| instance.status.as_ref().unwrap().state == *state)
                 .collect();
         };
 
