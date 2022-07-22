@@ -103,7 +103,10 @@ impl EpsilonController {
                     let instance_resource = &template.resources;
 
                     let mut labels = BTreeMap::new();
-                    labels.insert(String::from("epsilon.fr/type"), instance_type.to_string());
+                    labels.insert(
+                        String::from("epsilon.fr/instance"),
+                        instance_type.to_string(),
+                    );
 
                     let pod = Pod {
                         metadata: ObjectMeta {
