@@ -169,85 +169,87 @@ impl EpsilonController {
                     let pod_status = pod.status.as_ref().unwrap();
 
                     let pod_ip = pod_status.pod_ip.as_ref();
-                    let pod_conditions = pod_status.conditions.as_ref().unwrap();
-                    let pod_phase = pod_status.phase.as_ref().unwrap();
 
-                    let is_starting = pod_phase == "Pending";
-                    let is_running = pod_phase == "Running";
-                    let is_ready = pod_conditions
-                        .into_iter()
-                        .any(|condition| condition.type_ == "Ready" && condition.status == "True");
+                    if let Some(pod_conditions) = pod_status.conditions.as_ref() {
+                        let pod_phase = pod_status.phase.as_ref().unwrap();
 
-                    let state = if is_starting
-                        || !instance_status.is_some()
-                        || (!instance_status.as_ref().unwrap().start && is_running && !is_ready)
-                    {
-                        EpsilonState::Starting
-                    } else if is_running && is_ready {
-                        EpsilonState::Running
-                    } else {
-                        EpsilonState::Stopping
-                    };
+                        let is_starting = pod_phase == "Pending";
+                        let is_running = pod_phase == "Running";
+                        let is_ready = pod_conditions.into_iter().any(|condition| {
+                            condition.type_ == "Ready" && condition.status == "True"
+                        });
 
-                    let new_status = match instance_status {
-                        None => {
-                            let template =
-                                template_provider.get_template(template_name).await.unwrap();
+                        let state = if is_starting
+                            || !instance_status.is_some()
+                            || (!instance_status.as_ref().unwrap().start && is_running && !is_ready)
+                        {
+                            EpsilonState::Starting
+                        } else if is_running && is_ready {
+                            EpsilonState::Running
+                        } else {
+                            EpsilonState::Stopping
+                        };
 
-                            let instance_type = &template.t;
-                            let instance_resource = &template.resources;
+                        let new_status = match instance_status {
+                            None => {
+                                let template =
+                                    template_provider.get_template(template_name).await.unwrap();
 
-                            EpsilonInstanceStatus {
-                                ip: pod_ip.cloned(),
+                                let instance_type = &template.t;
+                                let instance_resource = &template.resources;
 
-                                template: String::from(template_name),
-                                t: instance_type.clone(),
+                                EpsilonInstanceStatus {
+                                    ip: pod_ip.cloned(),
 
-                                hub: template_provider.is_hub(&template),
+                                    template: String::from(template_name),
+                                    t: instance_type.clone(),
 
-                                content: String::from(""),
+                                    hub: template_provider.is_hub(&template),
 
-                                slots: template.slots,
+                                    content: String::from(""),
 
-                                close: false,
-                                start: state == EpsilonState::Running,
+                                    slots: template.slots,
 
-                                state,
+                                    close: false,
+                                    start: state == EpsilonState::Running,
+
+                                    state,
+                                }
                             }
-                        }
-                        Some(status) => {
-                            let mut new_status = status.clone();
+                            Some(status) => {
+                                let mut new_status = status.clone();
 
-                            new_status.ip = pod_ip.cloned();
-                            new_status.state = state;
+                                new_status.ip = pod_ip.cloned();
+                                new_status.state = state;
 
-                            new_status
-                        }
-                    };
+                                new_status
+                            }
+                        };
 
-                    epsilon_instance_api
-                        .patch_status(
-                            instance_name,
-                            &PatchParams::default(),
-                            &Patch::Merge(json!({ "status": new_status })),
-                        )
-                        .await?;
-
-                    let state = new_status.state;
-                    let close = new_status.close;
-
-                    if state == EpsilonState::Stopping && !close {
                         epsilon_instance_api
                             .patch_status(
                                 instance_name,
                                 &PatchParams::default(),
-                                &Patch::Merge(json!({ "status": { "close": true } })),
+                                &Patch::Merge(json!({ "status": new_status })),
                             )
                             .await?;
 
-                        epsilon_instance_api
-                            .delete(instance_name, &DeleteParams::default())
-                            .await?;
+                        let state = new_status.state;
+                        let close = new_status.close;
+
+                        if state == EpsilonState::Stopping && !close {
+                            epsilon_instance_api
+                                .patch_status(
+                                    instance_name,
+                                    &PatchParams::default(),
+                                    &Patch::Merge(json!({ "status": { "close": true } })),
+                                )
+                                .await?;
+
+                            epsilon_instance_api
+                                .delete(instance_name, &DeleteParams::default())
+                                .await?;
+                        }
                     }
                 }
             }
