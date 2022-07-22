@@ -103,6 +103,7 @@ impl EpsilonController {
                     let instance_resource = &template.resources;
 
                     let mut labels = BTreeMap::new();
+                    labels.insert(String::from("epsilon.fr/template"), template_name.clone());
                     labels.insert(
                         String::from("epsilon.fr/instance"),
                         instance_type.to_string(),
