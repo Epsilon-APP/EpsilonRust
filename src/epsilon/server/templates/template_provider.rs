@@ -74,8 +74,8 @@ impl TemplateProvider {
     #[inline]
     fn get_template_host(&self, route: &str) -> String {
         format!(
-            "http://{}:80/{}",
-            env::var("HOST_TEMPLATE").unwrap_or(String::from("dev-template.epsilon-srv.me")),
+            "http://{}:8000/{}",
+            env::var("HOST_TEMPLATE").unwrap(),
             route
         )
     }
