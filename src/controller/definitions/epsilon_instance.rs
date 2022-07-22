@@ -46,10 +46,27 @@ pub struct EpsilonInstanceStatus {
 }
 
 impl EpsilonInstance {
+    pub async fn to_json(&self) -> InstanceJson {
+        InstanceJson {
+            name: self.metadata.name.as_ref().unwrap().clone(),
+            template: self.spec.template.clone(),
+            state: self.get_state().clone(),
+            slots: self.get_slots(),
+            online_count: self.get_online_count().await.unwrap_or(0),
+        }
+    }
+
     pub fn get_state(&self) -> &EpsilonState {
         match &self.status {
             None => &EpsilonState::Starting,
             Some(status) => &status.state,
+        }
+    }
+
+    pub fn get_slots(&self) -> i32 {
+        match &self.status {
+            None => 0,
+            Some(status) => status.slots,
         }
     }
 
@@ -109,4 +126,13 @@ impl VectorOfInstance for Vec<Arc<EpsilonInstance>> {
 
         Ok(number)
     }
+}
+
+#[derive(Serialize)]
+pub struct InstanceJson {
+    pub name: String,
+    pub template: String,
+    pub state: EpsilonState,
+    pub slots: i32,
+    pub online_count: i32,
 }
