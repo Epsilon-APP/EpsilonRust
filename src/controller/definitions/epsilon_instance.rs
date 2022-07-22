@@ -51,7 +51,7 @@ impl EpsilonInstance {
             name: self.metadata.name.as_ref().unwrap().clone(),
             template: self.spec.template.clone(),
             state: self.get_state().clone(),
-            slots: self.get_slots(),
+            slots: self.status.as_ref().unwrap().slots,
             online_count: self.get_online_count().await.unwrap_or(0),
         }
     }
@@ -60,13 +60,6 @@ impl EpsilonInstance {
         match &self.status {
             None => &EpsilonState::Starting,
             Some(status) => &status.state,
-        }
-    }
-
-    pub fn get_slots(&self) -> i32 {
-        match &self.status {
-            None => 0,
-            Some(status) => status.slots,
         }
     }
 

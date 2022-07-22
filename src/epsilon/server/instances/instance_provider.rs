@@ -10,6 +10,7 @@ use anyhow::format_err;
 use futures::StreamExt;
 use k8s_openapi::apimachinery::pkg::apis::meta::v1::ObjectMeta;
 use kube::api::{DeleteParams, ListParams, PostParams};
+use kube::runtime::wait::await_condition;
 use kube::Api;
 use serde_json::json;
 use std::env;
@@ -65,6 +66,16 @@ impl InstanceProvider {
         get_all: bool,
     ) -> EResult<Vec<Arc<EpsilonInstance>>> {
         let mut instances = self.epsilon_controller.get_epsilon_instance_store().state();
+
+        for instance in &instances {
+            let condition = await_condition(
+                self.epsilon_controller.get_epsilon_instance_api().clone(),
+                instance.metadata.name.as_ref().unwrap(),
+                move |instance: Option<&EpsilonInstance>| instance.is_some(),
+            );
+
+            let _ = tokio::time::timeout(std::time::Duration::from_secs(3), condition).await?;
+        }
 
         instances = instances
             .into_iter()
