@@ -71,7 +71,12 @@ impl InstanceProvider {
             let condition = await_condition(
                 self.epsilon_controller.get_epsilon_instance_api().clone(),
                 instance.metadata.name.as_ref().unwrap(),
-                move |instance: Option<&EpsilonInstance>| instance.is_some(),
+                move |object: Option<&EpsilonInstance>| {
+                    if let Some(instance) = object {
+                        return instance.status.is_some();
+                    }
+                    false
+                },
             );
 
             let _ = tokio::time::timeout(std::time::Duration::from_secs(3), condition).await?;
