@@ -185,7 +185,7 @@ impl EpsilonController {
 
                         let state = if is_starting
                             || !instance_status.is_some()
-                            || (!instance_status.as_ref().unwrap().start && is_running && !is_ready)
+                            || (is_running && !is_ready)
                         {
                             EpsilonState::Starting
                         } else if is_running && is_ready {
@@ -214,8 +214,7 @@ impl EpsilonController {
 
                                     slots: template.slots,
 
-                                    close: false,
-                                    start: state == EpsilonState::Running,
+                                    close: state == EpsilonState::Stopping,
 
                                     state,
                                 }
@@ -242,6 +241,8 @@ impl EpsilonController {
                         let close = new_status.close;
 
                         if state == EpsilonState::Stopping && !close {
+                            debug!("DELETE {}", instance_name);
+
                             epsilon_instance_api
                                 .patch_status(
                                     instance_name,

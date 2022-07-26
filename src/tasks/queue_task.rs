@@ -43,6 +43,7 @@ impl Task for QueueTask {
 
                 if instances_starting.is_empty() && instances_ready.is_empty() {
                     instance_provider.start_instance(template_name).await?;
+                    return Ok(());
                 }
 
                 let ready_available_slots_result = instances_ready.get_available_slots().await;

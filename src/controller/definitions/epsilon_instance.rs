@@ -42,7 +42,6 @@ pub struct EpsilonInstanceStatus {
     pub slots: i32,
 
     pub close: bool,
-    pub start: bool,
 }
 
 impl EpsilonInstance {
