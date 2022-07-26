@@ -49,8 +49,6 @@ spec:
                 slots:
                   format: int32
                   type: integer
-                start:
-                  type: boolean
                 state:
                   enum:
                     - Starting
@@ -70,7 +68,6 @@ spec:
                 - content
                 - hub
                 - slots
-                - start
                 - state
                 - t
                 - template
