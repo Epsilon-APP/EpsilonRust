@@ -1,6 +1,15 @@
 #[macro_use]
 extern crate log;
 
+use std::{env, fs};
+use std::io::Write;
+use std::sync::Arc;
+
+use env_logger::fmt::Color;
+use k8s_openapi::chrono::Local;
+use kube::CustomResourceExt;
+use log::Level;
+
 use crate::config::EpsilonConfig;
 use crate::context::Context;
 use crate::controller::definitions::epsilon_instance::EpsilonInstance;
@@ -8,27 +17,18 @@ use crate::controller::definitions::epsilon_queue::EpsilonQueue;
 use crate::controller::epsilon_controller::EpsilonController;
 use crate::epsilon::api::epsilon_api::EpsilonApi;
 use crate::epsilon::queue::queue_provider::QueueProvider;
-use crate::epsilon::server::instances::instance_provider::InstanceProvider;
 use crate::epsilon::server::instances::EResult;
+use crate::epsilon::server::instances::instance_provider::InstanceProvider;
 use crate::epsilon::server::templates::template_provider::TemplateProvider;
-use crate::k8s::kube::Kube;
 use crate::tasks::hub_task::HubTask;
 use crate::tasks::proxy_task::ProxyTask;
 use crate::tasks::queue_task::QueueTask;
 use crate::tasks::task::Task;
 use crate::tasks::task_builder::TaskBuilder;
-use env_logger::fmt::Color;
-use k8s_openapi::chrono::Local;
-use kube::CustomResourceExt;
-use log::{Level, LevelFilter};
-use std::io::Write;
-use std::sync::Arc;
-use std::{env, fs};
 
 pub mod controller;
 
 pub mod epsilon;
-pub mod k8s;
 pub mod tasks;
 
 pub mod config;
@@ -44,13 +44,13 @@ async fn main() -> EResult<()> {
         format!("{}/{}", path_name, "epsilon_instance-definition.yaml"),
         serde_yaml::to_string(&EpsilonInstance::crd()).unwrap(),
     )
-    .unwrap();
+        .unwrap();
 
     fs::write(
         format!("{}/{}", path_name, "epsilon_queue-definition.yaml"),
         serde_yaml::to_string(&EpsilonQueue::crd()).unwrap(),
     )
-    .unwrap();
+        .unwrap();
 
     std::env::set_var(
         "RUST_LOG",
@@ -81,17 +81,17 @@ async fn main() -> EResult<()> {
         .init();
 
     let epsilon = concat!(
-        "┌──────────────────────────────────────┐\n",
-        "│   _____           _ _                │\n",
-        "│  |  ___|        (_) |                │\n",
-        "│  | |__ _ __  ___ _| | ___  _ __      │\n",
-        "│  |  __| '_ \\/ __| | |/ _ \\| '_ \\     │\n",
-        "│  | |__| |_) \\__ \\ | | (_) | | | |    │\n",
-        "│  \\____/ .__/|___/_|_|\\___/|_| |_|    │\n",
-        "│        | |                           │\n",
-        "│        |_|                           │\n",
-        "├──────────────────────────────────────┤\n",
-        "────────────────────────────────────────\n",
+    "┌──────────────────────────────────────┐\n",
+    "│   _____           _ _                │\n",
+    "│  |  ___|        (_) |                │\n",
+    "│  | |__ _ __  ___ _| | ___  _ __      │\n",
+    "│  |  __| '_ \\/ __| | |/ _ \\| '_ \\     │\n",
+    "│  | |__| |_) \\__ \\ | | (_) | | | |    │\n",
+    "│  \\____/ .__/|___/_|_|\\___/|_| |_|    │\n",
+    "│        | |                           │\n",
+    "│        |_|                           │\n",
+    "├──────────────────────────────────────┤\n",
+    "────────────────────────────────────────\n",
     );
 
     println!("{}", epsilon);
@@ -110,8 +110,7 @@ async fn main() -> EResult<()> {
     let template_provider = TemplateProvider::new(&config);
 
     let controller = EpsilonController::new(&namespace, &template_provider).await;
-
-    let instance_provider = InstanceProvider::new(&controller, &template_provider);
+    let instance_provider = InstanceProvider::new(&controller);
 
     let queue_provider = QueueProvider::new(&instance_provider, &template_provider).await?;
 

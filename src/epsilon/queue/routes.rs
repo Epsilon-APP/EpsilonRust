@@ -1,8 +1,10 @@
-use crate::epsilon::queue::common::group::Group;
-use crate::Context;
+use std::sync::Arc;
+
 use rocket::serde::json::Json;
 use rocket::State;
-use std::sync::Arc;
+
+use crate::Context;
+use crate::epsilon::queue::common::group::Group;
 
 #[rocket::post("/push", data = "<body>")]
 pub async fn push(body: Json<Group>, context: &State<Arc<Context>>) {

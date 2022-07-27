@@ -1,5 +1,6 @@
-use crate::Task;
 use std::time::Duration;
+
+use crate::Task;
 
 pub struct TaskBuilder;
 

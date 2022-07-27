@@ -1,10 +1,12 @@
+use std::sync::Arc;
+
+use rocket::State;
+use serde_json::json;
+
+use crate::Context;
 use crate::controller::definitions::epsilon_instance::InstanceJson;
 use crate::epsilon::epsilon_error::EpsilonError;
 use crate::epsilon::server::instances::common::instance_type::InstanceType;
-use crate::Context;
-use rocket::State;
-use serde_json::json;
-use std::sync::Arc;
 
 #[rocket::post("/create/<template>")]
 pub async fn create(template: &str, context: &State<Arc<Context>>) {
@@ -42,7 +44,7 @@ pub async fn in_game(instance: &str, context: &State<Arc<Context>>) {
     let instance_provider = context.get_instance_provider();
 
     instance_provider
-        .set_in_game_instance(instance, true)
+        .enable_in_game_instance(instance)
         .await
         .map_err(|_| {
             EpsilonError::ApiServerError(format!("Failed to set in game instance ({})", instance))
@@ -57,7 +59,7 @@ pub async fn get(template: &str, context: &State<Arc<Context>>) -> String {
     let instance_provider = context.get_instance_provider();
 
     let instances = instance_provider
-        .get_instances(&InstanceType::Server, Some(template), None, false)
+        .get_instances(&InstanceType::Server, Some(template), None)
         .await
         .map_err(|_| {
             EpsilonError::ApiServerError(format!(
@@ -82,7 +84,7 @@ pub async fn get_all(context: &State<Arc<Context>>) -> String {
     let instance_provider = context.get_instance_provider();
 
     let instances = instance_provider
-        .get_instances(&InstanceType::Server, None, None, false)
+        .get_instances(&InstanceType::Server, None, None)
         .await
         .map_err(|_| EpsilonError::ApiServerError("Failed to get every instance".to_string()))
         .unwrap()

@@ -1,8 +1,10 @@
-use crate::epsilon::server::templates::template::Template;
-use crate::{EResult, EpsilonConfig};
-use anyhow::format_err;
 use std::env;
 use std::sync::Arc;
+
+use anyhow::format_err;
+
+use crate::{EpsilonConfig, EResult};
+use crate::epsilon::server::templates::template::Template;
 
 pub struct TemplateProvider {
     config: Arc<EpsilonConfig>,

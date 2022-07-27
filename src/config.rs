@@ -1,6 +1,7 @@
-use serde::{Deserialize, Serialize};
 use std::fs;
 use std::sync::Arc;
+
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct EpsilonConfig {

@@ -1,8 +1,10 @@
-use crate::controller::definitions::epsilon_instance::EpsilonInstance;
-use crate::TemplateProvider;
+use std::sync::Arc;
+
 use k8s_openapi::api::core::v1::Pod;
 use kube::Api;
-use std::sync::Arc;
+
+use crate::controller::definitions::epsilon_instance::EpsilonInstance;
+use crate::TemplateProvider;
 
 pub struct Context {
     pub pod_api: Api<Pod>,

@@ -5,26 +5,22 @@ use crate::controller::definitions::epsilon_instance::{
 use crate::controller::definitions::epsilon_queue::EpsilonQueue;
 use crate::epsilon::server::instances::common::state::EpsilonState;
 use crate::{EResult, TemplateProvider};
+use anyhow::format_err;
 use futures::stream::StreamExt;
 use k8s_openapi::api::core::v1::{
     ConfigMapEnvSource, Container, EnvFromSource, ExecAction, Pod, PodSpec, Probe,
-    ResourceRequirements,
 };
-use k8s_openapi::apimachinery::pkg::apis::meta::v1::{ObjectMeta, OwnerReference};
+use k8s_openapi::apimachinery::pkg::apis::meta::v1::ObjectMeta;
 use kube::api::{DeleteParams, ListParams, Patch, PatchParams, PostParams};
 use kube::runtime::controller::Action;
-use kube::runtime::controller::Error::ObjectNotFound;
-use kube::runtime::finalizer::Event;
-use kube::runtime::reflector::Store;
-use kube::runtime::{finalizer, reflector, watcher, Controller};
-use kube::ResourceExt;
+use kube::runtime::reflector::{ObjectRef, Store};
+use kube::runtime::Controller;
 use kube::{Api, Client, Config};
 use kube::{Error, Resource};
 use serde_json::json;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 use std::env;
 use std::sync::Arc;
-use std::time::Duration;
 
 pub struct EpsilonController {
     context: Arc<Context>,
@@ -36,7 +32,7 @@ impl EpsilonController {
         namespace: &str,
         instance_provider: &Arc<TemplateProvider>,
     ) -> Arc<EpsilonController> {
-        let mut config = Config::infer().await.expect("Failed to load kube config");
+        let config = Config::infer().await.expect("Failed to load kube config");
         let client = Client::try_from(config).expect("Failed to create kube client");
 
         let pod_api: Api<Pod> = Api::namespaced(client.clone(), namespace);
@@ -61,7 +57,7 @@ impl EpsilonController {
                 .run(Self::reconcile, Self::on_error, clone_context)
                 .for_each(|res| async move {
                     match res {
-                        Ok(o) => {}
+                        Ok(_) => {}
                         Err(e) => debug!("Reconcile failed: {:?}", e),
                     }
                 })
@@ -88,10 +84,9 @@ impl EpsilonController {
 
         let instance_metadata = &epsilon_instance.metadata;
         let instance_spec = &epsilon_instance.spec;
-        let instance_status = &epsilon_instance.status;
+        let instance_status = epsilon_instance.status.clone();
 
         let instance_name = instance_metadata.name.as_ref().unwrap();
-
         let template_name = &instance_spec.template;
 
         if let Ok(pod_option) = pod_api.get_opt(instance_name).await {
@@ -103,7 +98,6 @@ impl EpsilonController {
                     let instance_resource = &template.resources;
 
                     let mut labels = BTreeMap::new();
-                    labels.insert(String::from("epsilon.fr/template"), template_name.clone());
                     labels.insert(
                         String::from("epsilon.fr/instance"),
                         instance_type.to_string(),
@@ -167,9 +161,6 @@ impl EpsilonController {
                     pod_api.create(&PostParams::default(), &pod).await?;
                 }
                 Some(pod) => {
-                    let pod_metadata = &pod.metadata;
-
-                    let pod_spec = pod.spec.as_ref().unwrap();
                     let pod_status = pod.status.as_ref().unwrap();
 
                     let pod_ip = pod_status.pod_ip.as_ref();
@@ -194,13 +185,12 @@ impl EpsilonController {
                             EpsilonState::Stopping
                         };
 
-                        let new_status = match instance_status {
+                        let mut new_status = match instance_status {
                             None => {
                                 let template =
                                     template_provider.get_template(template_name).await.unwrap();
 
                                 let instance_type = &template.t;
-                                let instance_resource = &template.resources;
 
                                 EpsilonInstanceStatus {
                                     ip: pod_ip.cloned(),
@@ -219,13 +209,11 @@ impl EpsilonController {
                                     state,
                                 }
                             }
-                            Some(status) => {
-                                let mut new_status = status.clone();
+                            Some(mut status) => {
+                                status.ip = pod_ip.cloned();
+                                status.state = state;
 
-                                new_status.ip = pod_ip.cloned();
-                                new_status.state = state;
-
-                                new_status
+                                status
                             }
                         };
 
@@ -237,17 +225,17 @@ impl EpsilonController {
                             )
                             .await?;
 
-                        let state = new_status.state;
-                        let close = new_status.close;
+                        let state = &new_status.state;
+                        let close = &new_status.close;
 
-                        if state == EpsilonState::Stopping && !close {
-                            debug!("DELETE {}", instance_name);
+                        if *state == EpsilonState::Stopping && !*close {
+                            new_status.close = true;
 
                             epsilon_instance_api
                                 .patch_status(
                                     instance_name,
                                     &PatchParams::default(),
-                                    &Patch::Merge(json!({ "status": { "close": true } })),
+                                    &Patch::Merge(json!({ "status": new_status })),
                                 )
                                 .await?;
 
@@ -278,12 +266,6 @@ impl EpsilonController {
 
     pub async fn create_epsilon_instance(&self, template_name: &str) -> EResult<EpsilonInstance> {
         let epsilon_instance_api = &self.context.epsilon_instance_api;
-        let template_provider = &self.context.template_provider;
-
-        let template = template_provider.get_template(template_name).await?;
-        let instance_type = &template.t;
-
-        let is_hub = template_provider.is_hub(&template);
 
         let epsilon_instance = EpsilonInstance {
             metadata: ObjectMeta {
@@ -299,6 +281,28 @@ impl EpsilonController {
         Ok(epsilon_instance_api
             .create(&PostParams::default(), &epsilon_instance)
             .await?)
+    }
+
+    pub async fn in_game_epsilon_instance(&self, instance_name: &str) -> EResult<()> {
+        let epsilon_instance_api = &self.context.epsilon_instance_api;
+        let store = &self.store;
+
+        if let Some(epsilon_instance) = store.get(&ObjectRef::new(instance_name)) {
+            let mut instance_status = epsilon_instance.status.as_ref().unwrap().clone();
+            instance_status.state = EpsilonState::InGame;
+
+            epsilon_instance_api
+                .patch_status(
+                    instance_name,
+                    &PatchParams::default(),
+                    &Patch::Merge(json!({ "status": instance_status })),
+                )
+                .await?;
+
+            Ok(())
+        } else {
+            Err(format_err!("Instance not found: {}", instance_name))
+        }
     }
 
     pub fn get_epsilon_instance_api(&self) -> &Api<EpsilonInstance> {

@@ -4,7 +4,7 @@ use std::sync::Arc;
 use crate::epsilon::server::instances::common::instance_type::InstanceType;
 use crate::epsilon::server::instances::common::state::EpsilonState;
 use crate::EResult;
-use anyhow::format_err;
+
 use async_minecraft_ping::{ConnectionConfig, StatusResponse};
 use kube::CustomResource;
 use schemars::JsonSchema;

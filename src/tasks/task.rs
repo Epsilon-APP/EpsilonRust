@@ -1,9 +1,8 @@
-use crate::epsilon::api::epsilon_api::EpsilonApi;
-use crate::epsilon::queue::queue_provider::QueueProvider;
-use crate::{Context, EResult, InstanceProvider};
-use async_trait::async_trait;
 use std::sync::Arc;
-use tokio::sync::Mutex;
+
+use async_trait::async_trait;
+
+use crate::{Context, EResult};
 
 #[async_trait]
 pub trait Task: Send + Sync {

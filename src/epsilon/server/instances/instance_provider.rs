@@ -1,34 +1,21 @@
-use crate::controller::definitions::epsilon_instance::{
-    EpsilonInstance, EpsilonInstanceSpec, EpsilonInstanceStatus,
-};
+use std::sync::Arc;
+
+use kube::api::DeleteParams;
+use kube::runtime::wait::await_condition;
+
+use crate::controller::definitions::epsilon_instance::EpsilonInstance;
 use crate::epsilon::server::instances::common::instance_type::InstanceType;
 use crate::epsilon::server::instances::common::state::EpsilonState;
-use crate::epsilon::server::templates::template::Template;
-use crate::k8s::label::Label;
-use crate::{EResult, EpsilonController, Kube, TemplateProvider};
-use anyhow::format_err;
-use futures::StreamExt;
-use k8s_openapi::apimachinery::pkg::apis::meta::v1::ObjectMeta;
-use kube::api::{DeleteParams, ListParams, PostParams};
-use kube::runtime::wait::await_condition;
-use kube::Api;
-use serde_json::json;
-use std::env;
-use std::sync::Arc;
+use crate::{EResult, EpsilonController};
 
 pub struct InstanceProvider {
     epsilon_controller: Arc<EpsilonController>,
-    template_provider: Arc<TemplateProvider>,
 }
 
 impl InstanceProvider {
-    pub fn new(
-        epsilon_controller: &Arc<EpsilonController>,
-        template_provider: &Arc<TemplateProvider>,
-    ) -> InstanceProvider {
+    pub fn new(epsilon_controller: &Arc<EpsilonController>) -> InstanceProvider {
         Self {
             epsilon_controller: Arc::clone(epsilon_controller),
-            template_provider: Arc::clone(template_provider),
         }
     }
 
@@ -63,7 +50,6 @@ impl InstanceProvider {
         instance_type: &InstanceType,
         template_option: Option<&str>,
         state_option: Option<&EpsilonState>,
-        get_all: bool,
     ) -> EResult<Vec<Arc<EpsilonInstance>>> {
         let mut instances = self.epsilon_controller.get_epsilon_instance_store().state();
 
@@ -84,8 +70,7 @@ impl InstanceProvider {
                 },
             );
 
-            let _ = tokio::time::timeout(std::time::Duration::from_secs(10), condition).await?;
-            info!("After timeout");
+            let _ = tokio::time::timeout(std::time::Duration::from_secs(5), condition).await?;
         }
 
         for instance in &instances {
@@ -118,7 +103,7 @@ impl InstanceProvider {
         Ok(instances)
     }
 
-    pub async fn set_in_game_instance(&self, name: &str, enable: bool) -> EResult<()> {
-        Ok(())
+    pub async fn enable_in_game_instance(&self, name: &str) -> EResult<()> {
+        self.epsilon_controller.in_game_epsilon_instance(name).await
     }
 }

@@ -1,7 +1,8 @@
+use std::collections::BTreeMap;
+
 use k8s_openapi::api::core::v1::ResourceRequirements;
 use k8s_openapi::apimachinery::pkg::api::resource::Quantity;
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
 
 #[derive(Serialize, Deserialize)]
 pub struct ResourcesInfo {

@@ -1,8 +1,9 @@
+use std::io;
+use std::str::FromStr;
+
 use k8s_openapi::api::core::v1::ContainerPort;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use std::io;
-use std::str::FromStr;
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone, JsonSchema)]
 pub enum InstanceType {

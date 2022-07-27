@@ -1,11 +1,13 @@
-use crate::epsilon::api::common::epsilon_events::EpsilonEvent;
-use crate::Context;
-use rocket::response::stream::{Event, EventStream};
-use rocket::{Shutdown, State};
-use serde_json::json;
 use std::sync::Arc;
+
+use rocket::{Shutdown, State};
+use rocket::response::stream::{Event, EventStream};
+use serde_json::json;
 use tokio::select;
 use tokio::sync::broadcast::error::RecvError;
+
+use crate::Context;
+use crate::epsilon::api::common::epsilon_events::EpsilonEvent;
 
 #[rocket::get("/ping")]
 pub async fn ping() -> &'static str {

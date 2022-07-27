@@ -1,5 +1,6 @@
-use crate::epsilon::api::common::epsilon_events::EpsilonEvent;
 use tokio::sync::broadcast::{channel, Receiver, Sender};
+
+use crate::epsilon::api::common::epsilon_events::EpsilonEvent;
 
 pub struct EpsilonApi {
     channel: Sender<EpsilonEvent>,

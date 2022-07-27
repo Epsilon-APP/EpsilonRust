@@ -1,5 +1,6 @@
-use crate::{EpsilonApi, InstanceProvider, QueueProvider, TemplateProvider};
 use std::sync::Arc;
+
+use crate::{EpsilonApi, InstanceProvider, QueueProvider, TemplateProvider};
 
 pub struct Context {
     epsilon_api: EpsilonApi,

@@ -1,10 +1,12 @@
+use std::sync::Arc;
+
+use async_trait::async_trait;
+
+use crate::{Context, EResult, Task};
 use crate::controller::definitions::epsilon_instance::VectorOfInstance;
 use crate::epsilon::server::instances::common::instance_type::InstanceType;
 use crate::epsilon::server::instances::common::state::EpsilonState;
 use crate::epsilon::server::templates::template::Template;
-use crate::{Context, EResult, Task};
-use async_trait::async_trait;
-use std::sync::Arc;
 
 const DEFAULT_TIME: &u32 = &60;
 
@@ -37,7 +39,6 @@ impl Task for HubTask {
                 &InstanceType::Proxy,
                 None,
                 Some(&EpsilonState::Running),
-                false,
             )
             .await?;
 
@@ -49,7 +50,6 @@ impl Task for HubTask {
                     &InstanceType::Server,
                     Some(template_name),
                     Some(&EpsilonState::Starting),
-                    false,
                 )
                 .await?;
 
@@ -59,7 +59,6 @@ impl Task for HubTask {
                         &InstanceType::Server,
                         Some(template_name),
                         Some(&EpsilonState::Running),
-                        false,
                     )
                     .await?;
 

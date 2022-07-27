@@ -1,8 +1,10 @@
+use std::sync::Arc;
+
+use async_trait::async_trait;
+
+use crate::{Context, EResult, Task};
 use crate::epsilon::server::instances::common::instance_type::InstanceType;
 use crate::epsilon::server::templates::template::Template;
-use crate::{Context, EResult, Task};
-use async_trait::async_trait;
-use std::sync::Arc;
 
 pub struct ProxyTask {
     context: Arc<Context>,
@@ -27,7 +29,7 @@ impl Task for ProxyTask {
         let template_name = &self.proxy_template.name;
 
         let proxies = instance_provider
-            .get_instances(&InstanceType::Proxy, None, None, false)
+            .get_instances(&InstanceType::Proxy, None, None)
             .await?;
 
         if proxies.is_empty() {
