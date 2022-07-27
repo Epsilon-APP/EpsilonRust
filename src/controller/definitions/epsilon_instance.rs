@@ -67,12 +67,13 @@ impl EpsilonInstance {
         let address = status.ip.as_ref().unwrap();
         let config = ConnectionConfig::build(address);
 
-        let duration = Duration::from_millis(150);
+        let duration = Duration::from_millis(100);
 
-        Ok(timeout(duration, async move {
-            config.connect().await?.status().await?.status
-        })
-        .await?)
+        let connect = timeout(duration, async move { config.connect().await }).await??;
+
+        let status = timeout(duration, async move { connect.status().await }).await??;
+
+        Ok(status.status)
     }
 
     pub async fn get_online_count(&self) -> EResult<i32> {
