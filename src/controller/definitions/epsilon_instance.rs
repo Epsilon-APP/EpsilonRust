@@ -70,14 +70,7 @@ impl EpsilonInstance {
         let duration = Duration::from_millis(150);
 
         Ok(timeout(duration, async move {
-            config
-                .connect()
-                .await
-                .unwrap()
-                .status()
-                .await
-                .unwrap()
-                .status
+            config.connect().await?.status().await?.status
         })
         .await?)
     }
