@@ -1,8 +1,6 @@
 use std::env;
 use std::sync::Arc;
 
-use anyhow::format_err;
-
 use crate::epsilon::epsilon_error::EpsilonError;
 use crate::epsilon::server::templates::template::Template;
 use crate::EpsilonConfig;

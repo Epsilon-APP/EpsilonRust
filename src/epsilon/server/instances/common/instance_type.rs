@@ -42,7 +42,7 @@ impl FromStr for InstanceType {
     type Err = io::Error;
 
     fn from_str(input: &str) -> Result<InstanceType, Self::Err> {
-        match String::from(input).to_lowercase().as_str() {
+        match input.to_lowercase().as_str() {
             "server" => Ok(InstanceType::Server),
             "proxy" => Ok(InstanceType::Proxy),
             _ => Err(io::Error::new(
@@ -55,9 +55,10 @@ impl FromStr for InstanceType {
 
 impl ToString for InstanceType {
     fn to_string(&self) -> String {
-        String::from(match self {
+        match self {
             InstanceType::Server => "server",
             InstanceType::Proxy => "proxy",
-        })
+        }
+        .to_owned()
     }
 }

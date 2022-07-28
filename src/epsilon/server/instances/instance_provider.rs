@@ -1,4 +1,3 @@
-use futures::TryFutureExt;
 use std::sync::Arc;
 
 use kube::api::DeleteParams;
@@ -38,7 +37,7 @@ impl InstanceProvider {
             .get_epsilon_instance_api()
             .delete(name, &DeleteParams::default())
             .await
-            .map_err(|_| EpsilonError::RemoveInstanceError(String::from(name)))?;
+            .map_err(|_| EpsilonError::RemoveInstanceError(name.to_owned()))?;
 
         Ok(())
     }
@@ -64,7 +63,7 @@ impl InstanceProvider {
             let name = instance.get_name();
 
             let condition = await_condition(
-                self.epsilon_controller.get_epsilon_instance_api().clone(),
+                self.epsilon_controller.get_epsilon_instance_api(),
                 &name,
                 move |object: Option<&EpsilonInstance>| {
                     object.map_or(false, |instance| instance.status.is_some())

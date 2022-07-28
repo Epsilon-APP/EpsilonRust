@@ -19,7 +19,7 @@ impl QueueProvider {
         let mut map = HashMap::new();
 
         for template in template_provider.get_templates().await? {
-            map.insert(String::from(&template.name), RwLock::new(Queue::new()));
+            map.insert(template.name.to_owned(), RwLock::new(Queue::new()));
         }
 
         Ok(QueueProvider { queue_map: map })

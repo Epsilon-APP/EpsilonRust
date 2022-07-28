@@ -1,5 +1,4 @@
 use rocket::http::Status;
-use rocket::http::StatusClass::ServerError;
 use rocket::response::Responder;
 use rocket::{response, Request, Response};
 use thiserror::Error;
@@ -35,7 +34,7 @@ pub enum EpsilonError {
 }
 
 impl<'r> Responder<'r, 'static> for EpsilonError {
-    fn respond_to(self, req: &'r Request<'_>) -> response::Result<'static> {
+    fn respond_to(self, _req: &'r Request<'_>) -> response::Result<'static> {
         Response::build().status(Status::InternalServerError).ok()
     }
 }

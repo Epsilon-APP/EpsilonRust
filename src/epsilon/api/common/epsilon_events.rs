@@ -7,8 +7,9 @@ pub enum EpsilonEvent {
 
 impl ToString for EpsilonEvent {
     fn to_string(&self) -> String {
-        String::from(match self {
+        match self {
             EpsilonEvent::SendToServer(_, _) => "SendToServer",
-        })
+        }
+        .to_owned()
     }
 }

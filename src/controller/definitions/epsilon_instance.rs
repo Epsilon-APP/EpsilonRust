@@ -5,7 +5,6 @@ use crate::epsilon::server::instances::common::instance_type::InstanceType;
 use crate::epsilon::server::instances::common::state::EpsilonState;
 
 use crate::epsilon::epsilon_error::EpsilonError;
-use anyhow::format_err;
 use async_minecraft_ping::{ConnectionConfig, StatusResponse};
 use kube::CustomResource;
 use schemars::JsonSchema;
@@ -50,7 +49,7 @@ impl EpsilonInstance {
         Ok(InstanceJson {
             name: self.get_name(),
             template: self.spec.template.clone(),
-            state: *self.get_state(),
+            state: self.get_state(),
 
             slots: self
                 .status
@@ -66,10 +65,10 @@ impl EpsilonInstance {
         self.metadata.name.as_ref().unwrap().to_owned()
     }
 
-    pub fn get_state(&self) -> &EpsilonState {
+    pub fn get_state(&self) -> EpsilonState {
         match &self.status {
-            None => &EpsilonState::Starting,
-            Some(status) => &status.state,
+            None => EpsilonState::Starting,
+            Some(status) => status.state,
         }
     }
 

@@ -64,10 +64,7 @@ impl Task for QueueTask {
                                 if group_size <= available_slots {
                                     available_slots -= group_size;
 
-                                    epsilon_api.send(SendToServer(
-                                        group,
-                                        instance.metadata.name.as_ref().unwrap().clone(),
-                                    ));
+                                    epsilon_api.send(SendToServer(group, instance.get_name()));
                                 }
                             }
                         }
