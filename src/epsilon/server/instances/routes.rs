@@ -3,13 +3,13 @@ use std::sync::Arc;
 use rocket::State;
 use serde_json::json;
 
-use crate::Context;
 use crate::controller::definitions::epsilon_instance::InstanceJson;
 use crate::epsilon::epsilon_error::EpsilonError;
 use crate::epsilon::server::instances::common::instance_type::InstanceType;
+use crate::Context;
 
 #[rocket::post("/create/<template>")]
-pub async fn create(template: &str, context: &State<Arc<Context>>) {
+pub async fn create(template: &str, context: &State<Arc<Context>>) -> Result<(), EpsilonError> {
     let instance_provider = context.get_instance_provider();
 
     instance_provider
@@ -20,14 +20,15 @@ pub async fn create(template: &str, context: &State<Arc<Context>>) {
                 "Failed to create an instance from template ({})",
                 template
             ))
-        })
-        .unwrap();
+        })?;
 
     info!("An instance has been created (template={})", template);
+
+    Ok(())
 }
 
 #[rocket::post("/close/<instance>")]
-pub async fn close(instance: &str, context: &State<Arc<Context>>) {
+pub async fn close(instance: &str, context: &State<Arc<Context>>) -> Result<(), EpsilonError> {
     let instance_provider = context.get_instance_provider();
 
     instance_provider
@@ -35,8 +36,11 @@ pub async fn close(instance: &str, context: &State<Arc<Context>>) {
         .await
         .map_err(|_| {
             EpsilonError::ApiServerError(format!("Failed to close instance ({})", instance))
-        })
-        .unwrap();
+        })?;
+
+    info!("An instance has been closed (instance={})", instance);
+
+    Ok(())
 }
 
 #[rocket::post("/in_game/<instance>")]
@@ -55,7 +59,7 @@ pub async fn in_game(instance: &str, context: &State<Arc<Context>>) {
 }
 
 #[rocket::get("/get/<template>")]
-pub async fn get(template: &str, context: &State<Arc<Context>>) -> String {
+pub async fn get(template: &str, context: &State<Arc<Context>>) -> Result<String, EpsilonError> {
     let instance_provider = context.get_instance_provider();
 
     let instances = instance_provider
@@ -66,21 +70,21 @@ pub async fn get(template: &str, context: &State<Arc<Context>>) -> String {
                 "Failed to get instance from template {}",
                 template
             ))
-        })
-        .unwrap()
+        })?
         .into_iter();
 
     let mut json_array: Vec<InstanceJson> = Vec::with_capacity(instances.len());
 
     for instance in instances {
-        json_array.push(instance.to_json().await);
+        let json = instance.to_json().await?;
+        json_array.push(json);
     }
 
-    json!({ "instances": json_array }).to_string()
+    Ok(json!({ "instances": json_array }).to_string())
 }
 
 #[rocket::get("/get_all")]
-pub async fn get_all(context: &State<Arc<Context>>) -> String {
+pub async fn get_all(context: &State<Arc<Context>>) -> Result<String, EpsilonError> {
     let instance_provider = context.get_instance_provider();
 
     let instances = instance_provider
@@ -93,18 +97,20 @@ pub async fn get_all(context: &State<Arc<Context>>) -> String {
     let mut json_array: Vec<InstanceJson> = Vec::new();
 
     for instance in instances {
-        let json = instance.to_json().await;
+        let json = instance.to_json().await?;
         json_array.push(json);
     }
 
-    json!({ "instances": json_array }).to_string()
+    Ok(json!({ "instances": json_array }).to_string())
 }
 
 #[rocket::get("/get_from_name/<instance_name>")]
-pub async fn get_from_name(instance_name: &str, context: &State<Arc<Context>>) -> String {
+pub async fn get_from_name(
+    instance_name: &str,
+    context: &State<Arc<Context>>,
+) -> Result<String, EpsilonError> {
     let instance_provider = context.get_instance_provider();
+    let instance = instance_provider.get_instance(instance_name).await?;
 
-    let instance = instance_provider.get_instance(instance_name).await.unwrap();
-
-    serde_json::to_string(&instance.to_json().await).unwrap()
+    Ok(serde_json::to_string(&instance.to_json().await?).unwrap())
 }

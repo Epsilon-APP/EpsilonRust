@@ -3,8 +3,9 @@ use std::sync::Arc;
 
 use tokio::sync::RwLock;
 
+use crate::epsilon::epsilon_error::EpsilonError;
 use crate::epsilon::queue::common::epsilon_queue::Queue;
-use crate::{EResult, InstanceProvider, TemplateProvider};
+use crate::{InstanceProvider, TemplateProvider};
 
 pub struct QueueProvider {
     queue_map: HashMap<String, RwLock<Queue>>,
@@ -14,7 +15,7 @@ impl QueueProvider {
     pub async fn new(
         _instance_provider: &InstanceProvider,
         template_provider: &Arc<TemplateProvider>,
-    ) -> EResult<QueueProvider> {
+    ) -> Result<QueueProvider, EpsilonError> {
         let mut map = HashMap::new();
 
         for template in template_provider.get_templates().await? {

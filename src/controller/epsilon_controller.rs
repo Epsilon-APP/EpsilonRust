@@ -3,6 +3,7 @@ use crate::controller::definitions::epsilon_instance::{
     EpsilonInstance, EpsilonInstanceSpec, EpsilonInstanceStatus,
 };
 use crate::controller::definitions::epsilon_queue::EpsilonQueue;
+use crate::epsilon::epsilon_error::EpsilonError;
 use crate::epsilon::server::instances::common::state::EpsilonState;
 use crate::{EResult, TemplateProvider};
 use anyhow::format_err;
@@ -264,7 +265,10 @@ impl EpsilonController {
         )
     }
 
-    pub async fn create_epsilon_instance(&self, template_name: &str) -> EResult<EpsilonInstance> {
+    pub async fn create_epsilon_instance(
+        &self,
+        template_name: &str,
+    ) -> Result<EpsilonInstance, EpsilonError> {
         let epsilon_instance_api = &self.context.epsilon_instance_api;
 
         let epsilon_instance = EpsilonInstance {
@@ -278,17 +282,25 @@ impl EpsilonController {
             status: None,
         };
 
-        Ok(epsilon_instance_api
+        let instance_result = epsilon_instance_api
             .create(&PostParams::default(), &epsilon_instance)
-            .await?)
+            .await
+            .map_err(|_| EpsilonError::CreateInstanceError(String::from(template_name)));
+
+        Ok(instance_result?)
     }
 
-    pub async fn in_game_epsilon_instance(&self, instance_name: &str) -> EResult<()> {
+    pub async fn in_game_epsilon_instance(&self, instance_name: &str) -> Result<(), EpsilonError> {
         let epsilon_instance_api = &self.context.epsilon_instance_api;
         let store = &self.store;
 
         if let Some(epsilon_instance) = store.get(&ObjectRef::new(instance_name)) {
-            let mut instance_status = epsilon_instance.status.as_ref().unwrap().clone();
+            let mut instance_status = epsilon_instance
+                .status
+                .as_ref()
+                .ok_or(EpsilonError::RetrieveStatusError)?
+                .clone();
+
             instance_status.state = EpsilonState::InGame;
 
             epsilon_instance_api
@@ -297,12 +309,11 @@ impl EpsilonController {
                     &PatchParams::default(),
                     &Patch::Merge(json!({ "status": instance_status })),
                 )
-                .await?;
-
-            Ok(())
-        } else {
-            Err(format_err!("Instance not found: {}", instance_name))
+                .await
+                .map_err(|_| EpsilonError::RemoveInstanceError(String::from(instance_name)))?;
         }
+
+        Ok(())
     }
 
     pub fn get_epsilon_instance_api(&self) -> &Api<EpsilonInstance> {

@@ -1,12 +1,14 @@
+use futures::TryFutureExt;
 use std::sync::Arc;
 
 use kube::api::DeleteParams;
 use kube::runtime::wait::await_condition;
 
 use crate::controller::definitions::epsilon_instance::EpsilonInstance;
+use crate::epsilon::epsilon_error::EpsilonError;
 use crate::epsilon::server::instances::common::instance_type::InstanceType;
 use crate::epsilon::server::instances::common::state::EpsilonState;
-use crate::{EResult, EpsilonController};
+use crate::EpsilonController;
 
 pub struct InstanceProvider {
     epsilon_controller: Arc<EpsilonController>,
@@ -19,30 +21,35 @@ impl InstanceProvider {
         }
     }
 
-    pub async fn start_instance(&self, template_name: &str) -> EResult<EpsilonInstance> {
+    pub async fn start_instance(
+        &self,
+        template_name: &str,
+    ) -> Result<EpsilonInstance, EpsilonError> {
         Ok(self
             .epsilon_controller
             .create_epsilon_instance(template_name)
             .await?)
     }
 
-    pub async fn remove_instance(&self, name: &str) -> EResult<()> {
+    pub async fn remove_instance(&self, name: &str) -> Result<(), EpsilonError> {
         info!("An instance has been removed (name={})", name);
 
         self.epsilon_controller
             .get_epsilon_instance_api()
             .delete(name, &DeleteParams::default())
-            .await?;
+            .await
+            .map_err(|_| EpsilonError::RemoveInstanceError(String::from(name)))?;
 
         Ok(())
     }
 
-    pub async fn get_instance(&self, instance_name: &str) -> EResult<EpsilonInstance> {
+    pub async fn get_instance(&self, instance_name: &str) -> Result<EpsilonInstance, EpsilonError> {
         Ok(self
             .epsilon_controller
             .get_epsilon_instance_api()
             .get(instance_name)
-            .await?)
+            .await
+            .map_err(|_| EpsilonError::RetrieveInstanceError)?)
     }
 
     pub async fn get_instances(
@@ -50,35 +57,21 @@ impl InstanceProvider {
         instance_type: &InstanceType,
         template_option: Option<&str>,
         state_option: Option<&EpsilonState>,
-    ) -> EResult<Vec<Arc<EpsilonInstance>>> {
+    ) -> Result<Vec<Arc<EpsilonInstance>>, EpsilonError> {
         let mut instances = self.epsilon_controller.get_epsilon_instance_store().state();
 
         for instance in &instances {
+            let name = instance.get_name();
+
             let condition = await_condition(
                 self.epsilon_controller.get_epsilon_instance_api().clone(),
-                instance.metadata.name.as_ref().unwrap(),
+                &name,
                 move |object: Option<&EpsilonInstance>| {
-                    object.map_or(false, |instance| {
-                        info!(
-                            "Instance status ({}) : {}",
-                            instance.metadata.name.as_ref().unwrap(),
-                            instance.status.is_some()
-                        );
-
-                        instance.status.is_some()
-                    })
+                    object.map_or(false, |instance| instance.status.is_some())
                 },
             );
 
             let _ = tokio::time::timeout(std::time::Duration::from_secs(5), condition).await?;
-        }
-
-        for instance in &instances {
-            info!(
-                "Instance ({}) : {}",
-                instance.metadata.name.as_ref().unwrap(),
-                instance.status.is_some()
-            );
         }
 
         instances = instances
@@ -103,7 +96,7 @@ impl InstanceProvider {
         Ok(instances)
     }
 
-    pub async fn enable_in_game_instance(&self, name: &str) -> EResult<()> {
+    pub async fn enable_in_game_instance(&self, name: &str) -> Result<(), EpsilonError> {
         self.epsilon_controller.in_game_epsilon_instance(name).await
     }
 }

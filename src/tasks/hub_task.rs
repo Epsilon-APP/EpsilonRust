@@ -2,11 +2,12 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 
-use crate::{Context, EResult, Task};
 use crate::controller::definitions::epsilon_instance::VectorOfInstance;
+use crate::epsilon::epsilon_error::EpsilonError;
 use crate::epsilon::server::instances::common::instance_type::InstanceType;
 use crate::epsilon::server::instances::common::state::EpsilonState;
 use crate::epsilon::server::templates::template::Template;
+use crate::{Context, Task};
 
 const DEFAULT_TIME: &u32 = &60;
 
@@ -19,7 +20,7 @@ pub struct HubTask {
 
 #[async_trait]
 impl Task for HubTask {
-    async fn init(context: Arc<Context>) -> EResult<Box<dyn Task>> {
+    async fn init(context: Arc<Context>) -> Result<Box<dyn Task>, EpsilonError> {
         let hub_template = context.get_template_provider().get_hub_template().await?;
 
         Ok(Box::new(Self {
@@ -30,16 +31,12 @@ impl Task for HubTask {
         }))
     }
 
-    async fn run(&mut self) -> EResult<()> {
+    async fn run(&mut self) -> Result<(), EpsilonError> {
         let instance_provider = self.context.get_instance_provider();
         let template_name = &self.hub_template.name;
 
         let proxies = instance_provider
-            .get_instances(
-                &InstanceType::Proxy,
-                None,
-                Some(&EpsilonState::Running),
-            )
+            .get_instances(&InstanceType::Proxy, None, Some(&EpsilonState::Running))
             .await?;
 
         let proxy_number = proxies.len();

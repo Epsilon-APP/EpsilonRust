@@ -3,8 +3,9 @@ use std::sync::Arc;
 
 use crate::epsilon::server::instances::common::instance_type::InstanceType;
 use crate::epsilon::server::instances::common::state::EpsilonState;
-use crate::EResult;
 
+use crate::epsilon::epsilon_error::EpsilonError;
+use anyhow::format_err;
 use async_minecraft_ping::{ConnectionConfig, StatusResponse};
 use kube::CustomResource;
 use schemars::JsonSchema;
@@ -45,14 +46,24 @@ pub struct EpsilonInstanceStatus {
 }
 
 impl EpsilonInstance {
-    pub async fn to_json(&self) -> InstanceJson {
-        InstanceJson {
-            name: self.metadata.name.as_ref().unwrap().clone(),
+    pub async fn to_json(&self) -> Result<InstanceJson, EpsilonError> {
+        Ok(InstanceJson {
+            name: self.get_name(),
             template: self.spec.template.clone(),
-            state: self.get_state().clone(),
-            slots: self.status.as_ref().unwrap().slots,
+            state: *self.get_state(),
+
+            slots: self
+                .status
+                .as_ref()
+                .ok_or(EpsilonError::RetrieveStatusError)?
+                .slots,
+
             online_count: self.get_online_count().await.unwrap_or(0),
-        }
+        })
+    }
+
+    pub fn get_name(&self) -> String {
+        self.metadata.name.as_ref().unwrap().to_owned()
     }
 
     pub fn get_state(&self) -> &EpsilonState {
@@ -62,38 +73,51 @@ impl EpsilonInstance {
         }
     }
 
-    pub async fn get_info(&self) -> EResult<StatusResponse> {
-        let status = self.status.as_ref().unwrap();
-        let address = status.ip.as_ref().unwrap();
+    pub async fn get_info(&self) -> Result<StatusResponse, EpsilonError> {
+        let status = self
+            .status
+            .as_ref()
+            .ok_or(EpsilonError::RetrieveStatusError)?;
+
+        let address = status
+            .ip
+            .as_ref()
+            .ok_or(EpsilonError::RetrieveStatusError)?;
+
         let config = ConnectionConfig::build(address);
+        let duration = Duration::from_millis(150);
 
-        let duration = Duration::from_millis(100);
+        let status_result: Result<StatusResponse, EpsilonError> = timeout(duration, async move {
+            Ok(config.connect().await?.status().await?.status)
+        })
+        .await?;
 
-        let connect = timeout(duration, async move { config.connect().await }).await??;
-
-        let status = timeout(duration, async move { connect.status().await }).await??;
-
-        Ok(status.status)
+        status_result
     }
 
-    pub async fn get_online_count(&self) -> EResult<i32> {
+    pub async fn get_online_count(&self) -> Result<i32, EpsilonError> {
         Ok(self.get_info().await?.players.online as i32)
     }
 
-    pub async fn get_available_slots(&self) -> EResult<i32> {
-        Ok(&self.status.as_ref().unwrap().slots - self.get_online_count().await?)
+    pub async fn get_available_slots(&self) -> Result<i32, EpsilonError> {
+        Ok(&self
+            .status
+            .as_ref()
+            .ok_or(EpsilonError::RetrieveStatusError)?
+            .slots
+            - self.get_online_count().await?)
     }
 }
 
 #[async_trait]
 pub trait VectorOfInstance {
-    async fn get_available_slots(&self) -> EResult<i32>;
-    async fn get_online_count(&self) -> EResult<i32>;
+    async fn get_available_slots(&self) -> Result<i32, EpsilonError>;
+    async fn get_online_count(&self) -> Result<i32, EpsilonError>;
 }
 
 #[async_trait]
 impl VectorOfInstance for Vec<Arc<EpsilonInstance>> {
-    async fn get_available_slots(&self) -> EResult<i32> {
+    async fn get_available_slots(&self) -> Result<i32, EpsilonError> {
         let mut available_slots = 0;
 
         for instance in self {
@@ -103,7 +127,7 @@ impl VectorOfInstance for Vec<Arc<EpsilonInstance>> {
         Ok(available_slots)
     }
 
-    async fn get_online_count(&self) -> EResult<i32> {
+    async fn get_online_count(&self) -> Result<i32, EpsilonError> {
         let mut number = 0;
 
         for instance in self {

@@ -2,11 +2,12 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 
-use crate::{Context, EResult, Task};
 use crate::controller::definitions::epsilon_instance::VectorOfInstance;
 use crate::epsilon::api::common::epsilon_events::EpsilonEvent::SendToServer;
+use crate::epsilon::epsilon_error::EpsilonError;
 use crate::epsilon::server::instances::common::instance_type::InstanceType;
 use crate::epsilon::server::instances::common::state::EpsilonState;
+use crate::{Context, Task};
 
 pub struct QueueTask {
     context: Arc<Context>,
@@ -14,11 +15,11 @@ pub struct QueueTask {
 
 #[async_trait]
 impl Task for QueueTask {
-    async fn init(context: Arc<Context>) -> EResult<Box<dyn Task>> {
+    async fn init(context: Arc<Context>) -> Result<Box<dyn Task>, EpsilonError> {
         Ok(Box::new(Self { context }))
     }
 
-    async fn run(&mut self) -> EResult<()> {
+    async fn run(&mut self) -> Result<(), EpsilonError> {
         let epsilon_api = self.context.get_epsilon_api();
         let instance_provider = self.context.get_instance_provider();
         let queue_provider = self.context.get_queue_provider();
