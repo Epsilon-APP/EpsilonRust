@@ -5,7 +5,7 @@ use k8s_openapi::api::core::v1::ContainerPort;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone, JsonSchema)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone, Copy, JsonSchema)]
 pub enum InstanceType {
     Server,
     Proxy,

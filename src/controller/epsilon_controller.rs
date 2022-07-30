@@ -175,7 +175,7 @@ impl EpsilonController {
 
                         let state = if is_starting
                             || !instance_status.is_some()
-                            || (is_running && !is_ready)
+                            || (is_running && !is_ready && instance_status.as_ref().unwrap().state != EpsilonState::Running)
                         {
                             EpsilonState::Starting
                         } else if is_running && is_ready {
