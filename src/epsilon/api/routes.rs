@@ -1,13 +1,14 @@
 use std::sync::Arc;
 
-use rocket::{Shutdown, State};
 use rocket::response::stream::{Event, EventStream};
+use rocket::{Shutdown, State};
 use serde_json::json;
+use std::time::Duration;
 use tokio::select;
 use tokio::sync::broadcast::error::RecvError;
 
-use crate::Context;
 use crate::epsilon::api::common::epsilon_events::EpsilonEvent;
+use crate::Context;
 
 #[rocket::get("/ping")]
 pub async fn ping() -> &'static str {
@@ -20,7 +21,7 @@ pub async fn events(context: &State<Arc<Context>>, mut end: Shutdown) -> EventSt
 
     let mut rx = epsilon_api.subscribe();
 
-    EventStream! {
+    let stream = EventStream! {
         loop {
             let event: EpsilonEvent = select! {
                 event = rx.recv() => match event {
@@ -44,5 +45,7 @@ pub async fn events(context: &State<Arc<Context>>, mut end: Shutdown) -> EventSt
                 }
             }
         }
-    }
+    };
+
+    stream.heartbeat(Duration::from_secs(5))
 }
