@@ -4,11 +4,13 @@ extern crate log;
 use std::{env, fs};
 use std::io::Write;
 use std::sync::Arc;
+use std::time::Duration;
 
 use env_logger::fmt::Color;
 use k8s_openapi::chrono::Local;
 use kube::CustomResourceExt;
 use log::Level;
+use tokio::time::sleep;
 
 use crate::config::EpsilonConfig;
 use crate::context::Context;
@@ -122,6 +124,8 @@ async fn main() -> EResult<()> {
     );
 
     info!("Instance provider has been started");
+
+    sleep(Duration::from_secs(10)).await;
 
     TaskBuilder::new()
         .ignite_task(ProxyTask::init(Arc::clone(&context)).await?, 6000)
