@@ -21,6 +21,7 @@ use serde_json::json;
 use std::collections::BTreeMap;
 use std::env;
 use std::sync::Arc;
+use std::time::Duration;
 
 pub struct EpsilonController {
     context: Arc<Context>,
@@ -57,7 +58,7 @@ impl EpsilonController {
                 .run(Self::reconcile, Self::on_error, clone_context)
                 .for_each(|res| async move {
                     match res {
-                        Ok(_) => {}
+                        Ok(_) => debug!("Sync successful"),
                         Err(e) => debug!("Reconcile failed: {:?}", e),
                     }
                 })
@@ -202,6 +203,7 @@ impl EpsilonController {
                                     content: String::from(""),
 
                                     slots: template.slots,
+                                    online: 0,
 
                                     close: state == EpsilonState::Stopping,
 
@@ -211,6 +213,10 @@ impl EpsilonController {
                             Some(mut status) => {
                                 status.ip = pod_ip;
                                 status.state = state;
+
+                                if state == EpsilonState::Running {
+                                    status.online = epsilon_instance.get_online_count().await.unwrap_or(0);
+                                }
 
                                 status
                             }
@@ -247,7 +253,7 @@ impl EpsilonController {
             }
         };
 
-        Ok(Action::await_change())
+        Ok(Action::requeue(Duration::from_secs(30)))
     }
 
     fn on_error(error: &Error, _context: Arc<Context>) -> Action {

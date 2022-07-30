@@ -40,24 +40,33 @@ pub struct EpsilonInstanceStatus {
     pub state: EpsilonState,
 
     pub slots: i32,
+    pub online: i32,
 
     pub close: bool,
 }
 
 impl EpsilonInstance {
     pub async fn to_json(&self) -> Result<InstanceJson, EpsilonError> {
+        let status = self
+            .status
+            .as_ref()
+            .ok_or(EpsilonError::RetrieveStatusError)?.clone();
+
         Ok(InstanceJson {
             name: self.get_name(),
             template: self.spec.template.clone(),
+
+            content: status.content,
+
+            hub: status.hub,
+
+            t: status.t,
             state: self.get_state(),
 
-            slots: self
-                .status
-                .as_ref()
-                .ok_or(EpsilonError::RetrieveStatusError)?
-                .slots,
-
+            slots: status.slots,
             online_count: self.get_online_count().await.unwrap_or(0),
+
+            ip: status.ip,
         })
     }
 
@@ -137,7 +146,17 @@ impl VectorOfInstance for Vec<Arc<EpsilonInstance>> {
 pub struct InstanceJson {
     pub name: String,
     pub template: String,
+
+    pub content: String,
+
+    pub hub: bool,
+
+    #[serde(rename = "type")]
+    pub t: InstanceType,
     pub state: EpsilonState,
+
     pub slots: i32,
     pub online_count: i32,
+
+    pub ip: Option<String>
 }

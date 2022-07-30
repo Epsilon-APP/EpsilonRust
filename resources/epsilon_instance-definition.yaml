@@ -46,6 +46,9 @@ spec:
                 ip:
                   nullable: true
                   type: string
+                online:
+                  format: int32
+                  type: integer
                 slots:
                   format: int32
                   type: integer
@@ -67,6 +70,7 @@ spec:
                 - close
                 - content
                 - hub
+                - online
                 - slots
                 - state
                 - t
