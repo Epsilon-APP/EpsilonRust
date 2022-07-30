@@ -57,42 +57,29 @@ impl InstanceProvider {
         template_option: Option<&str>,
         state_option: Option<&EpsilonState>,
     ) -> Result<Vec<Arc<EpsilonInstance>>, EpsilonError> {
-        let mut instances = self.epsilon_controller.get_epsilon_instance_store().state();
+        let instances = self.epsilon_controller.get_epsilon_instance_store().state();
 
         for instance in &instances {
-            let name = instance.get_name();
-
-            let condition = await_condition(
-                self.epsilon_controller.get_epsilon_instance_api(),
-                &name,
-                move |object: Option<&EpsilonInstance>| {
-                    object.map_or(false, |instance| instance.status.is_some())
-                },
-            );
-
-            let _ = tokio::time::timeout(std::time::Duration::from_secs(5), condition).await?;
+            instance.status.as_ref().ok_or(EpsilonError::RetrieveInstanceError)?;
         }
 
-        instances = instances
-            .into_iter()
-            .filter(|instance| instance.status.as_ref().unwrap().t == *instance_type)
-            .collect();
+        Ok(instances.into_iter()
+            .filter(|instance| {
+                let status = instance.status.as_ref().unwrap();
 
-        if let Some(template_name) = template_option {
-            instances = instances
-                .into_iter()
-                .filter(|instance| instance.spec.template == template_name)
-                .collect();
-        };
+                let condition1 = status.t == *instance_type;
 
-        if let Some(state) = state_option {
-            instances = instances
-                .into_iter()
-                .filter(|instance| instance.status.as_ref().unwrap().state == *state)
-                .collect();
-        };
+                let condition2 = if let Some(template_name) = template_option {
+                    instance.spec.template == template_name
+                } else { true };
 
-        Ok(instances)
+                let condition3 = if let Some(state) = state_option {
+                    status.state == *state
+                }else { true };
+
+                condition1 && condition2 && condition3
+            })
+            .collect())
     }
 
     pub async fn enable_in_game_instance(&self, name: &str) -> Result<(), EpsilonError> {
