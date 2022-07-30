@@ -18,7 +18,6 @@ use kube::runtime::Controller;
 use kube::{Api, Client, Config};
 use kube::{Error, Resource};
 use serde_json::json;
-use std::borrow::BorrowMut;
 use std::collections::BTreeMap;
 use std::env;
 use std::sync::Arc;
