@@ -73,14 +73,10 @@ impl EpsilonInstance {
     }
 
     pub async fn get_info(&self) -> Result<StatusResponse, EpsilonError> {
-        let status = self
+        let address = self
             .status
             .as_ref()
-            .ok_or(EpsilonError::RetrieveStatusError)?;
-
-        let address = status
-            .ip
-            .as_ref()
+            .and_then(|status| status.ip.as_ref())
             .ok_or(EpsilonError::RetrieveStatusError)?;
 
         let config = ConnectionConfig::build(address);

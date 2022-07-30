@@ -11,7 +11,10 @@ pub enum EpsilonError {
     #[error("Failed to parse json")]
     ParseJsonError,
 
-    #[error("Create instance error, template is ({0})")]
+    #[error("Send event error {0}")]
+    SendEventError(String),
+
+    #[error("Create instance error, template is {0}")]
     CreateInstanceError(String),
 
     #[error("Remove instance error {0}")]
@@ -22,6 +25,9 @@ pub enum EpsilonError {
 
     #[error("Retrieve status error")]
     RetrieveStatusError,
+
+    #[error("Queue not found error {0}")]
+    QueueNotFoundError(String),
 
     #[error("Request error {0}")]
     RequestError(#[from] reqwest::Error),

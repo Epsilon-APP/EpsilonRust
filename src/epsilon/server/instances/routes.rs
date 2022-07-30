@@ -44,7 +44,7 @@ pub async fn close(instance: &str, context: &State<Arc<Context>>) -> Result<(), 
 }
 
 #[rocket::post("/in_game/<instance>")]
-pub async fn in_game(instance: &str, context: &State<Arc<Context>>) {
+pub async fn in_game(instance: &str, context: &State<Arc<Context>>) -> Result<(), EpsilonError> {
     let instance_provider = context.get_instance_provider();
 
     instance_provider
@@ -52,10 +52,11 @@ pub async fn in_game(instance: &str, context: &State<Arc<Context>>) {
         .await
         .map_err(|_| {
             EpsilonError::ApiServerError(format!("Failed to set in game instance ({})", instance))
-        })
-        .unwrap();
+        })?;
 
     info!("An instance is now in game (name={})", instance);
+
+    Ok(())
 }
 
 #[rocket::get("/get/<template>")]
@@ -90,8 +91,7 @@ pub async fn get_all(context: &State<Arc<Context>>) -> Result<String, EpsilonErr
     let instances = instance_provider
         .get_instances(&InstanceType::Server, None, None)
         .await
-        .map_err(|_| EpsilonError::ApiServerError("Failed to get every instance".to_string()))
-        .unwrap()
+        .map_err(|_| EpsilonError::ApiServerError("Failed to get every instance".to_string()))?
         .into_iter();
 
     let mut json_array: Vec<InstanceJson> = Vec::new();
@@ -112,5 +112,6 @@ pub async fn get_from_name(
     let instance_provider = context.get_instance_provider();
     let instance = instance_provider.get_instance(instance_name).await?;
 
-    Ok(serde_json::to_string(&instance.to_json().await?).unwrap())
+    Ok(serde_json::to_string(&instance.to_json().await?)
+        .map_err(|_| EpsilonError::ParseJsonError)?)
 }

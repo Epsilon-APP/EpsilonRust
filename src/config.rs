@@ -39,11 +39,18 @@ impl Default for EpsilonConfig {
 impl EpsilonConfig {
     pub fn load(name: &str) -> Arc<EpsilonConfig> {
         Arc::new(match fs::read_to_string(name) {
-            Ok(json) => serde_json::from_str::<EpsilonConfig>(&json).unwrap(),
+            Ok(json) => {
+                serde_json::from_str::<EpsilonConfig>(&json).expect("Failed to parse config")
+            }
             Err(_) => {
                 let config = EpsilonConfig::default();
 
-                fs::write(name, serde_json::to_string_pretty(&config).unwrap()).unwrap();
+                fs::write(
+                    name,
+                    serde_json::to_string_pretty(&config)
+                        .expect("Failed to serialize default config"),
+                )
+                .expect("Failed to write default config");
 
                 config
             }

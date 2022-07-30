@@ -62,9 +62,14 @@ impl Task for QueueTask {
                                 let group_size = group.players.len() as i32;
 
                                 if group_size <= available_slots {
-                                    available_slots -= group_size;
-
-                                    epsilon_api.send(SendToServer(group, instance.get_name()));
+                                    match epsilon_api.send(SendToServer(group, instance.get_name()))
+                                    {
+                                        Ok(_) => {
+                                            available_slots -= group_size;
+                                            Ok(())
+                                        }
+                                        Err(e) => Err(e),
+                                    }?
                                 }
                             }
                         }

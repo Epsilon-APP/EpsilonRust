@@ -70,7 +70,7 @@ impl TemplateProvider {
     fn get_template_host(&self, route: &str) -> String {
         format!(
             "http://{}:8000/{}",
-            env::var("HOST_TEMPLATE").unwrap(),
+            env::var("HOST_TEMPLATE").expect("Failed to get HOST_TEMPLATE Environment"),
             route
         )
     }
