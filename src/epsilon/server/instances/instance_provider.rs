@@ -75,7 +75,7 @@ impl InstanceProvider {
 
                 let condition3 = if let Some(state) = state_option {
                     status.state == *state
-                }else { true };
+                } else { true };
 
                 condition1 && condition2 && condition3
             })
