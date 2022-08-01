@@ -84,6 +84,18 @@ pub async fn get(template: &str, context: &State<Arc<Context>>) -> Result<String
     Ok(json!({ "instances": json_array }).to_string())
 }
 
+#[rocket::get("/get_from_name/<instance_name>")]
+pub async fn get_from_name(
+    instance_name: &str,
+    context: &State<Arc<Context>>,
+) -> Result<String, EpsilonError> {
+    let instance_provider = context.get_instance_provider();
+    let instance = instance_provider.get_instance(instance_name).await?;
+
+    Ok(serde_json::to_string(&instance.to_json().await?)
+        .map_err(|_| EpsilonError::ParseJsonError)?)
+}
+
 #[rocket::get("/get_all")]
 pub async fn get_all(context: &State<Arc<Context>>) -> Result<String, EpsilonError> {
     let instance_provider = context.get_instance_provider();
@@ -102,16 +114,4 @@ pub async fn get_all(context: &State<Arc<Context>>) -> Result<String, EpsilonErr
     }
 
     Ok(json!({ "instances": json_array }).to_string())
-}
-
-#[rocket::get("/get_from_name/<instance_name>")]
-pub async fn get_from_name(
-    instance_name: &str,
-    context: &State<Arc<Context>>,
-) -> Result<String, EpsilonError> {
-    let instance_provider = context.get_instance_provider();
-    let instance = instance_provider.get_instance(instance_name).await?;
-
-    Ok(serde_json::to_string(&instance.to_json().await?)
-        .map_err(|_| EpsilonError::ParseJsonError)?)
 }
