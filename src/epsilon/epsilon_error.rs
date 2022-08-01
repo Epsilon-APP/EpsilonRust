@@ -26,6 +26,9 @@ pub enum EpsilonError {
     #[error("Retrieve status error")]
     RetrieveStatusError,
 
+    #[error("Retrieve Ip address error")]
+    RetrieveIpAddressError,
+
     #[error("Queue not found error {0}")]
     QueueNotFoundError(String),
 

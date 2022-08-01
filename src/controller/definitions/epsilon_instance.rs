@@ -50,7 +50,8 @@ impl EpsilonInstance {
         let status = self
             .status
             .as_ref()
-            .ok_or(EpsilonError::RetrieveStatusError)?.clone();
+            .ok_or(EpsilonError::RetrieveStatusError)?
+            .clone();
 
         Ok(InstanceJson {
             name: self.get_name(),
@@ -82,13 +83,21 @@ impl EpsilonInstance {
     }
 
     pub async fn get_info(&self) -> Result<StatusResponse, EpsilonError> {
-        let address = self
+        let status = self
             .status
             .as_ref()
-            .and_then(|status| status.ip.as_ref())
             .ok_or(EpsilonError::RetrieveStatusError)?;
 
-        let config = ConnectionConfig::build(address);
+        let address = status
+            .ip
+            .as_ref()
+            .ok_or(EpsilonError::RetrieveIpAddressError)?;
+
+        let port = status.t.get_entry_port();
+
+        let mut config = ConnectionConfig::build(address);
+        config = config.with_port(port as u16);
+
         let duration = Duration::from_millis(150);
 
         let status_result: Result<StatusResponse, EpsilonError> = timeout(duration, async move {
@@ -158,5 +167,5 @@ pub struct InstanceJson {
     pub slots: i32,
     pub online_count: i32,
 
-    pub ip: Option<String>
+    pub ip: Option<String>,
 }

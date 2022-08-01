@@ -134,7 +134,7 @@ impl EpsilonController {
                                         ..Default::default()
                                     },
                                 ]),
-                                ports: Some(instance_type.get_associated_ports()),
+                                ports: Some(instance_type.get_container_ports()),
                                 resources: Some(instance_resource.kube_resources()),
                                 readiness_probe: Some(Probe {
                                     initial_delay_seconds: Some(5),
@@ -176,7 +176,9 @@ impl EpsilonController {
 
                         let state = if is_starting
                             || !instance_status.is_some()
-                            || (is_running && !is_ready && instance_status.as_ref().unwrap().state != EpsilonState::Running)
+                            || (is_running
+                                && !is_ready
+                                && instance_status.as_ref().unwrap().state != EpsilonState::Running)
                         {
                             EpsilonState::Starting
                         } else if is_running && is_ready {
@@ -215,7 +217,8 @@ impl EpsilonController {
                                 status.state = state;
 
                                 if state == EpsilonState::Running {
-                                    status.online = epsilon_instance.get_online_count().await.unwrap_or(0);
+                                    status.online =
+                                        epsilon_instance.get_online_count().await.unwrap_or(0);
                                 }
 
                                 status

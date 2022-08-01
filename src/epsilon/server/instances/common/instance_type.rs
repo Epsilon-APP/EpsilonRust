@@ -12,17 +12,17 @@ pub enum InstanceType {
 }
 
 impl InstanceType {
-    pub fn get_associated_ports(&self) -> Vec<ContainerPort> {
+    pub fn get_container_ports(&self) -> Vec<ContainerPort> {
         match self {
             InstanceType::Server => vec![ContainerPort {
-                container_port: 25565,
+                container_port: self.get_entry_port(),
                 name: Some(String::from("server")),
                 protocol: Some(String::from("TCP")),
                 ..Default::default()
             }],
             InstanceType::Proxy => vec![
                 ContainerPort {
-                    container_port: 25577,
+                    container_port: self.get_entry_port(),
                     name: Some(String::from("proxy")),
                     protocol: Some(String::from("TCP")),
                     ..Default::default()
@@ -36,19 +36,11 @@ impl InstanceType {
             ],
         }
     }
-}
 
-impl FromStr for InstanceType {
-    type Err = io::Error;
-
-    fn from_str(input: &str) -> Result<InstanceType, Self::Err> {
-        match input.to_lowercase().as_str() {
-            "server" => Ok(InstanceType::Server),
-            "proxy" => Ok(InstanceType::Proxy),
-            _ => Err(io::Error::new(
-                io::ErrorKind::InvalidInput,
-                format!("Invalid instance type, {}", input),
-            )),
+    pub fn get_entry_port(&self) -> i32 {
+        match self {
+            InstanceType::Server => 25565,
+            InstanceType::Proxy => 25577,
         }
     }
 }
