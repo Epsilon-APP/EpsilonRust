@@ -13,6 +13,7 @@ use k8s_openapi::api::core::v1::{
 use k8s_openapi::apimachinery::pkg::apis::meta::v1::ObjectMeta;
 use kube::api::{DeleteParams, ListParams, Patch, PatchParams, PostParams};
 use kube::runtime::controller::Action;
+use kube::runtime::controller::Error::ObjectNotFound;
 use kube::runtime::reflector::{ObjectRef, Store};
 use kube::runtime::Controller;
 use kube::{Api, Client, Config};
@@ -59,7 +60,12 @@ impl EpsilonController {
                 .for_each(|res| async move {
                     match res {
                         Ok(_) => debug!("Sync successful"),
-                        Err(e) => debug!("Reconcile failed: {:?}", e),
+                        Err(e) => {
+                            if let ObjectNotFound(_) = e {
+                            } else {
+                                error!("Sync error: {}", e);
+                            }
+                        }
                     }
                 })
                 .await;
@@ -80,9 +86,6 @@ impl EpsilonController {
 
         let template_provider = &context.template_provider;
 
-        let mut instance_owner_reference = epsilon_instance.controller_owner_ref(&()).unwrap();
-        instance_owner_reference.block_owner_deletion = Some(true);
-
         let instance_spec = &epsilon_instance.spec;
         let instance_status = epsilon_instance.status.clone();
 
@@ -92,6 +95,10 @@ impl EpsilonController {
         if let Ok(pod_option) = pod_api.get_opt(&instance_name).await {
             match pod_option {
                 None => {
+                    let mut instance_owner_reference =
+                        epsilon_instance.controller_owner_ref(&()).unwrap();
+                    instance_owner_reference.block_owner_deletion = Some(true);
+
                     let template = template_provider.get_template(template_name).await.unwrap();
 
                     let instance_type = &template.t;
