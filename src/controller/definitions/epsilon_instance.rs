@@ -20,6 +20,7 @@ use tokio::time::timeout;
     status = "EpsilonInstanceStatus",
     printcolumn = r#"{"name":"Template", "type":"string", "description":"Template name of instance", "jsonPath":".spec.template"}"#,
     printcolumn = r#"{"name":"State", "type":"string", "description":"State of instance", "jsonPath":".status.state"}"#,
+    printcolumn = r#"{"name":"Online", "type":"integer", "description":"Online count of instance", "jsonPath":".status.online"}"#,
     namespaced
 )]
 pub struct EpsilonInstanceSpec {
