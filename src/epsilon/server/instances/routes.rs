@@ -59,33 +59,8 @@ pub async fn in_game(instance: &str, context: &State<Arc<Context>>) -> Result<()
     Ok(())
 }
 
-#[rocket::get("/get/<template>")]
-pub async fn get(template: &str, context: &State<Arc<Context>>) -> Result<String, EpsilonError> {
-    let instance_provider = context.get_instance_provider();
-
-    let instances = instance_provider
-        .get_instances(&InstanceType::Server, Some(template), None)
-        .await
-        .map_err(|_| {
-            EpsilonError::ApiServerError(format!(
-                "Failed to get instance from template {}",
-                template
-            ))
-        })?
-        .into_iter();
-
-    let mut json_array: Vec<InstanceJson> = Vec::with_capacity(instances.len());
-
-    for instance in instances {
-        let json = instance.to_json().await?;
-        json_array.push(json);
-    }
-
-    Ok(json!({ "instances": json_array }).to_string())
-}
-
-#[rocket::get("/get_from_name/<instance_name>")]
-pub async fn get_from_name(
+#[rocket::get("/get/<instance_name>")]
+pub async fn get(
     instance_name: &str,
     context: &State<Arc<Context>>,
 ) -> Result<String, EpsilonError> {
@@ -101,12 +76,40 @@ pub async fn get_all(context: &State<Arc<Context>>) -> Result<String, EpsilonErr
     let instance_provider = context.get_instance_provider();
 
     let instances = instance_provider
-        .get_instances(&InstanceType::Server, None, None)
+        .get_instances(InstanceType::Server, None, None)
         .await
         .map_err(|_| EpsilonError::ApiServerError("Failed to get every instance".to_string()))?
         .into_iter();
 
     let mut json_array: Vec<InstanceJson> = Vec::new();
+
+    for instance in instances {
+        let json = instance.to_json().await?;
+        json_array.push(json);
+    }
+
+    Ok(json!({ "instances": json_array }).to_string())
+}
+
+#[rocket::get("/get_from_template/<template>")]
+pub async fn get_from_template(
+    template: &str,
+    context: &State<Arc<Context>>,
+) -> Result<String, EpsilonError> {
+    let instance_provider = context.get_instance_provider();
+
+    let instances = instance_provider
+        .get_instances(InstanceType::Server, Some(template), None)
+        .await
+        .map_err(|_| {
+            EpsilonError::ApiServerError(format!(
+                "Failed to get instance from template {}",
+                template
+            ))
+        })?
+        .into_iter();
+
+    let mut json_array: Vec<InstanceJson> = Vec::with_capacity(instances.len());
 
     for instance in instances {
         let json = instance.to_json().await?;

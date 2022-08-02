@@ -1,10 +1,10 @@
 #[macro_use]
 extern crate log;
 
-use std::{env, fs};
 use std::io::Write;
 use std::sync::Arc;
 use std::time::Duration;
+use std::{env, fs};
 
 use env_logger::fmt::Color;
 use k8s_openapi::chrono::Local;
@@ -19,8 +19,8 @@ use crate::controller::definitions::epsilon_queue::EpsilonQueue;
 use crate::controller::epsilon_controller::EpsilonController;
 use crate::epsilon::api::epsilon_api::EpsilonApi;
 use crate::epsilon::queue::queue_provider::QueueProvider;
-use crate::epsilon::server::instances::EResult;
 use crate::epsilon::server::instances::instance_provider::InstanceProvider;
+use crate::epsilon::server::instances::EResult;
 use crate::epsilon::server::templates::template_provider::TemplateProvider;
 use crate::tasks::hub_task::HubTask;
 use crate::tasks::proxy_task::ProxyTask;
@@ -46,13 +46,13 @@ async fn main() -> EResult<()> {
         format!("{}/{}", path_name, "epsilon_instance-definition.yaml"),
         serde_yaml::to_string(&EpsilonInstance::crd()).unwrap(),
     )
-        .unwrap();
+    .unwrap();
 
     fs::write(
         format!("{}/{}", path_name, "epsilon_queue-definition.yaml"),
         serde_yaml::to_string(&EpsilonQueue::crd()).unwrap(),
     )
-        .unwrap();
+    .unwrap();
 
     std::env::set_var(
         "RUST_LOG",
@@ -83,17 +83,17 @@ async fn main() -> EResult<()> {
         .init();
 
     let epsilon = concat!(
-    "┌──────────────────────────────────────┐\n",
-    "│   _____           _ _                │\n",
-    "│  |  ___|        (_) |                │\n",
-    "│  | |__ _ __  ___ _| | ___  _ __      │\n",
-    "│  |  __| '_ \\/ __| | |/ _ \\| '_ \\     │\n",
-    "│  | |__| |_) \\__ \\ | | (_) | | | |    │\n",
-    "│  \\____/ .__/|___/_|_|\\___/|_| |_|    │\n",
-    "│        | |                           │\n",
-    "│        |_|                           │\n",
-    "├──────────────────────────────────────┤\n",
-    "────────────────────────────────────────\n",
+        "┌──────────────────────────────────────┐\n",
+        "│   _____           _ _                │\n",
+        "│  |  ___|        (_) |                │\n",
+        "│  | |__ _ __  ___ _| | ___  _ __      │\n",
+        "│  |  __| '_ \\/ __| | |/ _ \\| '_ \\     │\n",
+        "│  | |__| |_) \\__ \\ | | (_) | | | |    │\n",
+        "│  \\____/ .__/|___/_|_|\\___/|_| |_|    │\n",
+        "│        | |                           │\n",
+        "│        |_|                           │\n",
+        "├──────────────────────────────────────┤\n",
+        "────────────────────────────────────────\n",
     );
 
     println!("{}", epsilon);
@@ -151,7 +151,7 @@ async fn main() -> EResult<()> {
                 epsilon::server::instances::routes::in_game,
                 epsilon::server::instances::routes::get,
                 epsilon::server::instances::routes::get_all,
-                epsilon::server::instances::routes::get_from_name
+                epsilon::server::instances::routes::get_from_template
             ],
         )
         .launch()

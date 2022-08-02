@@ -53,29 +53,37 @@ impl InstanceProvider {
 
     pub async fn get_instances(
         &self,
-        instance_type: &InstanceType,
+        instance_type: InstanceType,
         template_option: Option<&str>,
-        state_option: Option<&EpsilonState>,
+        state_option: Option<EpsilonState>,
     ) -> Result<Vec<Arc<EpsilonInstance>>, EpsilonError> {
         let instances = self.epsilon_controller.get_epsilon_instance_store().state();
 
         for instance in &instances {
-            instance.status.as_ref().ok_or(EpsilonError::RetrieveInstanceError)?;
+            instance
+                .status
+                .as_ref()
+                .ok_or(EpsilonError::RetrieveInstanceError)?;
         }
 
-        Ok(instances.into_iter()
+        Ok(instances
+            .into_iter()
             .filter(|instance| {
                 let status = instance.status.as_ref().unwrap();
 
-                let condition1 = status.t == *instance_type;
+                let condition1 = status.t == instance_type;
 
                 let condition2 = if let Some(template_name) = template_option {
                     instance.spec.template == template_name
-                } else { true };
+                } else {
+                    true
+                };
 
                 let condition3 = if let Some(state) = state_option {
-                    status.state == *state
-                } else { true };
+                    status.state == state
+                } else {
+                    true
+                };
 
                 condition1 && condition2 && condition3
             })

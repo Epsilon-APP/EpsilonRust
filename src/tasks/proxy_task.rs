@@ -28,7 +28,7 @@ impl Task for ProxyTask {
         let template_name = &self.proxy_template.name;
 
         let proxies = instance_provider
-            .get_instances(&InstanceType::Proxy, None, None)
+            .get_instances(InstanceType::Proxy, None, None)
             .await?;
 
         if proxies.is_empty() {
