@@ -138,7 +138,7 @@ async fn main() -> EResult<()> {
         .merge(("ident", "Epsilon"))
         .merge(("address", "0.0.0.0"));
 
-    rocket::custom(figment)
+    let _ = rocket::custom(figment)
         .manage(Arc::clone(&context))
         .mount("/", rocket::routes![epsilon::api::routes::ping])
         .mount("/api", rocket::routes![epsilon::api::routes::events])
