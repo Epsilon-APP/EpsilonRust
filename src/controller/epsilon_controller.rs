@@ -277,7 +277,7 @@ impl EpsilonController {
 
     fn on_error(error: &Error, _context: Arc<Context>) -> Action {
         warn!("Reconciliation error: {:?}", error);
-        Action::await_change()
+        Action::requeue(Duration::from_secs(5))
     }
 
     fn get_image(template: &str) -> String {
