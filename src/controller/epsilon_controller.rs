@@ -18,7 +18,7 @@ use kube::runtime::reflector::{ObjectRef, Store};
 use kube::runtime::Controller;
 use kube::{Api, Client, Config};
 use kube::{Error, Resource};
-use serde_json::json;
+use serde_json::{json, Value};
 use std::collections::BTreeMap;
 use std::env;
 use std::sync::Arc;
@@ -90,7 +90,10 @@ impl EpsilonController {
         let instance_status = epsilon_instance.status.clone();
 
         let instance_name = epsilon_instance.get_name();
-        let template_name = &instance_spec.template;
+
+        let instance_content = instance_spec.content.clone();
+
+        let instance_template_name = &instance_spec.template;
 
         if let Ok(pod_option) = pod_api.get_opt(&instance_name).await {
             match pod_option {
@@ -99,7 +102,10 @@ impl EpsilonController {
                         epsilon_instance.controller_owner_ref(&()).unwrap();
                     instance_owner_reference.block_owner_deletion = Some(true);
 
-                    let template = template_provider.get_template(template_name).await.unwrap();
+                    let template = template_provider
+                        .get_template(instance_template_name)
+                        .await
+                        .unwrap();
 
                     let instance_type = &template.t;
                     let instance_resource = &template.resources;
@@ -121,7 +127,7 @@ impl EpsilonController {
                             restart_policy: Some(String::from("Never")),
                             containers: vec![Container {
                                 name: String::from("main"),
-                                image: Some(Self::get_image(&template_name)),
+                                image: Some(Self::get_image(&instance_template_name)),
                                 image_pull_policy: Some(String::from("Always")),
                                 env_from: Some(vec![
                                     EnvFromSource {
@@ -196,20 +202,22 @@ impl EpsilonController {
 
                         let mut new_status = match instance_status {
                             None => {
-                                let template =
-                                    template_provider.get_template(template_name).await.unwrap();
+                                let template = template_provider
+                                    .get_template(instance_template_name)
+                                    .await
+                                    .unwrap();
 
                                 let template_type = template.t.clone();
 
                                 EpsilonInstanceStatus {
                                     ip: pod_ip,
 
-                                    template: template_name.to_owned(),
+                                    template: instance_template_name.to_owned(),
                                     t: template_type,
 
                                     hub: template_provider.is_hub(&template),
 
-                                    content: String::from(""),
+                                    content: instance_content,
 
                                     slots: template.slots,
                                     online: 0,
@@ -221,6 +229,7 @@ impl EpsilonController {
                             }
                             Some(mut status) => {
                                 status.ip = pod_ip;
+                                status.content = instance_content;
                                 status.state = state;
 
                                 if state == EpsilonState::Running {
@@ -282,6 +291,7 @@ impl EpsilonController {
     pub async fn create_epsilon_instance(
         &self,
         template_name: &str,
+        content: Value,
     ) -> Result<EpsilonInstance, EpsilonError> {
         let epsilon_instance_api = &self.context.epsilon_instance_api;
 
@@ -292,6 +302,7 @@ impl EpsilonController {
             },
             spec: EpsilonInstanceSpec {
                 template: template_name.to_owned(),
+                content,
             },
             status: None,
         };

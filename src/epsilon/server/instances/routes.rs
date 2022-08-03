@@ -2,18 +2,25 @@ use std::sync::Arc;
 
 use rocket::State;
 use serde_json::json;
+use serde_json::Value;
 
 use crate::controller::definitions::epsilon_instance::InstanceJson;
 use crate::epsilon::epsilon_error::EpsilonError;
 use crate::epsilon::server::instances::common::instance_type::InstanceType;
 use crate::Context;
 
-#[rocket::post("/create/<template>")]
-pub async fn create(template: &str, context: &State<Arc<Context>>) -> Result<(), EpsilonError> {
+use rocket::serde::json::Json;
+
+#[rocket::post("/create/<template>", format = "json", data = "<content>")]
+pub async fn create(
+    template: &str,
+    content: Json<Value>,
+    context: &State<Arc<Context>>,
+) -> Result<(), EpsilonError> {
     let instance_provider = context.get_instance_provider();
 
     instance_provider
-        .start_instance(template)
+        .start_instance(template, Some(content.0))
         .await
         .map_err(|_| {
             EpsilonError::ApiServerError(format!(

@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use kube::api::DeleteParams;
-use kube::runtime::wait::await_condition;
+use serde_json::Value;
 
 use crate::controller::definitions::epsilon_instance::EpsilonInstance;
 use crate::epsilon::epsilon_error::EpsilonError;
@@ -23,10 +23,11 @@ impl InstanceProvider {
     pub async fn start_instance(
         &self,
         template_name: &str,
+        content: Option<Value>,
     ) -> Result<EpsilonInstance, EpsilonError> {
         Ok(self
             .epsilon_controller
-            .create_epsilon_instance(template_name)
+            .create_epsilon_instance(template_name, content.unwrap_or_default())
             .await?)
     }
 

@@ -66,7 +66,9 @@ impl Task for HubTask {
                         + 1.0) as u32;
 
                     if hub_number < hub_necessary {
-                        instance_provider.start_instance(template_name).await?;
+                        instance_provider
+                            .start_instance(template_name, None)
+                            .await?;
                     }
 
                     if hub_number > hub_necessary {

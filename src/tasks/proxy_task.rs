@@ -32,7 +32,9 @@ impl Task for ProxyTask {
             .await?;
 
         if proxies.is_empty() {
-            instance_provider.start_instance(template_name).await?;
+            instance_provider
+                .start_instance(template_name, None)
+                .await?;
         }
 
         Ok(())

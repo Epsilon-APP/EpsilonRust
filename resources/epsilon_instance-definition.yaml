@@ -33,9 +33,11 @@ spec:
           properties:
             spec:
               properties:
+                content: {}
                 template:
                   type: string
               required:
+                - content
                 - template
               type: object
             status:
@@ -43,8 +45,7 @@ spec:
               properties:
                 close:
                   type: boolean
-                content:
-                  type: string
+                content: {}
                 hub:
                   type: boolean
                 ip:
