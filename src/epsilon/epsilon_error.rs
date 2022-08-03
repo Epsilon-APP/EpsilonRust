@@ -32,6 +32,9 @@ pub enum EpsilonError {
     #[error("Queue not found error {0}")]
     QueueNotFoundError(String),
 
+    #[error("Kubernetes error {0}")]
+    KubernetesError(#[from] kube::Error),
+
     #[error("Request error {0}")]
     RequestError(#[from] reqwest::Error),
 

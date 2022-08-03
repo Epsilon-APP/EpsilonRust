@@ -16,8 +16,8 @@ use kube::runtime::controller::Action;
 use kube::runtime::controller::Error::ObjectNotFound;
 use kube::runtime::reflector::{ObjectRef, Store};
 use kube::runtime::Controller;
+use kube::Resource;
 use kube::{Api, Client, Config};
-use kube::{Error, Resource};
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
 use std::env;
@@ -80,7 +80,7 @@ impl EpsilonController {
     async fn reconcile(
         epsilon_instance: Arc<EpsilonInstance>,
         context: Arc<Context>,
-    ) -> Result<Action, Error> {
+    ) -> Result<Action, EpsilonError> {
         let pod_api = &context.pod_api;
         let epsilon_instance_api = &context.epsilon_instance_api;
 
@@ -104,8 +104,7 @@ impl EpsilonController {
 
                     let template = template_provider
                         .get_template(instance_template_name)
-                        .await
-                        .unwrap();
+                        .await?;
 
                     let instance_type = &template.t;
                     let instance_resource = &template.resources;
@@ -204,8 +203,7 @@ impl EpsilonController {
                             None => {
                                 let template = template_provider
                                     .get_template(instance_template_name)
-                                    .await
-                                    .unwrap();
+                                    .await?;
 
                                 let template_type = template.t.clone();
 
@@ -275,7 +273,7 @@ impl EpsilonController {
         Ok(Action::requeue(Duration::from_secs(30)))
     }
 
-    fn on_error(error: &Error, _context: Arc<Context>) -> Action {
+    fn on_error(error: &EpsilonError, _context: Arc<Context>) -> Action {
         warn!("Reconciliation error: {:?}", error);
         Action::requeue(Duration::from_secs(5))
     }
