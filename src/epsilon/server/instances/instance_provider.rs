@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use kube::api::DeleteParams;
-use serde_json::Value;
+use serde_json::{Map, Value};
 
 use crate::controller::definitions::epsilon_instance::EpsilonInstance;
 use crate::epsilon::epsilon_error::EpsilonError;
@@ -25,9 +25,11 @@ impl InstanceProvider {
         template_name: &str,
         content: Option<Value>,
     ) -> Result<EpsilonInstance, EpsilonError> {
+        let default = Value::Object(Map::new());
+
         Ok(self
             .epsilon_controller
-            .create_epsilon_instance(template_name, content.unwrap_or_default())
+            .create_epsilon_instance(template_name, content.unwrap_or(default))
             .await?)
     }
 

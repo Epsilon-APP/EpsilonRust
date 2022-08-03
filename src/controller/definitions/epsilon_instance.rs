@@ -9,7 +9,6 @@ use async_minecraft_ping::{ConnectionConfig, StatusResponse};
 use kube::CustomResource;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 use std::time::Duration;
 use tokio::time::timeout;
 
@@ -26,7 +25,7 @@ use tokio::time::timeout;
 )]
 pub struct EpsilonInstanceSpec {
     pub template: String,
-    pub content: Value,
+    pub content: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, JsonSchema)]
@@ -38,7 +37,7 @@ pub struct EpsilonInstanceStatus {
 
     pub hub: bool,
 
-    pub content: Value,
+    pub content: String,
 
     pub state: EpsilonState,
 
@@ -159,7 +158,7 @@ pub struct InstanceJson {
     pub name: String,
     pub template: String,
 
-    pub content: Value,
+    pub content: String,
 
     pub hub: bool,
 

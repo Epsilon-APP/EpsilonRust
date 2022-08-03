@@ -33,7 +33,8 @@ spec:
           properties:
             spec:
               properties:
-                content: {}
+                content:
+                  type: string
                 template:
                   type: string
               required:
@@ -45,7 +46,8 @@ spec:
               properties:
                 close:
                   type: boolean
-                content: {}
+                content:
+                  type: string
                 hub:
                   type: boolean
                 ip:

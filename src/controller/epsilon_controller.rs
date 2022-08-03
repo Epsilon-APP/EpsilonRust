@@ -302,7 +302,7 @@ impl EpsilonController {
             },
             spec: EpsilonInstanceSpec {
                 template: template_name.to_owned(),
-                content,
+                content: content.to_string(),
             },
             status: None,
         };
