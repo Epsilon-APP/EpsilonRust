@@ -83,7 +83,7 @@ pub async fn get_all(context: &State<Arc<Context>>) -> Result<String, EpsilonErr
     let instance_provider = context.get_instance_provider();
 
     let instances = instance_provider
-        .get_instances(InstanceType::Server, None, None)
+        .get_instances(None, None, None)
         .await
         .map_err(|_| EpsilonError::ApiServerError("Failed to get every instance".to_string()))?
         .into_iter();
@@ -106,7 +106,7 @@ pub async fn get_from_template(
     let instance_provider = context.get_instance_provider();
 
     let instances = instance_provider
-        .get_instances(InstanceType::Server, Some(template), None)
+        .get_instances(None, Some(template), None)
         .await
         .map_err(|_| {
             EpsilonError::ApiServerError(format!(

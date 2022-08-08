@@ -36,7 +36,7 @@ impl Task for HubTask {
         let template_name = &self.hub_template.name;
 
         let proxies = instance_provider
-            .get_instances(InstanceType::Proxy, None, Some(EpsilonState::Running))
+            .get_instances(Some(InstanceType::Proxy), None, Some(EpsilonState::Running))
             .await?;
 
         let proxy_number = proxies.len();
@@ -44,7 +44,7 @@ impl Task for HubTask {
         if proxy_number > 0 {
             let hubs_starting = instance_provider
                 .get_instances(
-                    InstanceType::Server,
+                    Some(InstanceType::Server),
                     Some(template_name),
                     Some(EpsilonState::Starting),
                 )
@@ -53,7 +53,7 @@ impl Task for HubTask {
             if hubs_starting.is_empty() {
                 let hubs_ready = instance_provider
                     .get_instances(
-                        InstanceType::Server,
+                        Some(InstanceType::Server),
                         Some(template_name),
                         Some(EpsilonState::Running),
                     )

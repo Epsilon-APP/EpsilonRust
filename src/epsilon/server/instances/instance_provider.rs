@@ -56,7 +56,7 @@ impl InstanceProvider {
 
     pub async fn get_instances(
         &self,
-        instance_type: InstanceType,
+        type_option: Option<InstanceType>,
         template_option: Option<&str>,
         state_option: Option<EpsilonState>,
     ) -> Result<Vec<Arc<EpsilonInstance>>, EpsilonError> {
@@ -74,10 +74,14 @@ impl InstanceProvider {
             .filter(|instance| {
                 let status = instance.status.as_ref().unwrap();
 
-                let condition1 = status.t == instance_type;
-
-                let condition2 = if let Some(template_name) = template_option {
+                let condition1 = if let Some(template_name) = template_option {
                     instance.spec.template == template_name
+                } else {
+                    true
+                };
+
+                let condition2 = if let Some(instance_type) = type_option {
+                    status.t == instance_type
                 } else {
                     true
                 };

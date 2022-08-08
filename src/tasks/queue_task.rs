@@ -28,7 +28,7 @@ impl Task for QueueTask {
             if !queue.read().await.is_empty() {
                 let instances_starting = instance_provider
                     .get_instances(
-                        InstanceType::Server,
+                        Some(InstanceType::Server),
                         Some(template_name),
                         Some(EpsilonState::Starting),
                     )
@@ -36,7 +36,7 @@ impl Task for QueueTask {
 
                 let instances_ready = instance_provider
                     .get_instances(
-                        InstanceType::Server,
+                        Some(InstanceType::Server),
                         Some(template_name),
                         Some(EpsilonState::Running),
                     )
