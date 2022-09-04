@@ -50,7 +50,7 @@ impl TemplateProvider {
         Ok(request
             .json::<Template>()
             .await
-            .map_err(|_| EpsilonError::ParseJsonError)?)
+            .map_err(|_| EpsilonError::ParseJsonError("Get Template".tostring()))?)
     }
 
     pub async fn get_templates(&self) -> Result<Vec<Template>, EpsilonError> {
@@ -63,7 +63,7 @@ impl TemplateProvider {
         Ok(request
             .json::<Vec<Template>>()
             .await
-            .map_err(|_| EpsilonError::ParseJsonError)?)
+            .map_err(|_| EpsilonError::ParseJsonError("Get Templates".tostring()))?)
     }
 
     #[inline]

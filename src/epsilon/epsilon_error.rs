@@ -8,8 +8,8 @@ pub enum EpsilonError {
     #[error("API server error {0}")]
     ApiServerError(String),
 
-    #[error("Failed to parse json")]
-    ParseJsonError,
+    #[error("Failed to parse json {0}")]
+    ParseJsonError(String),
 
     #[error("Send event error {0}")]
     SendEventError(String),
