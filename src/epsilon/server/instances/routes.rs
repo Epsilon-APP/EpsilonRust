@@ -75,7 +75,8 @@ pub async fn get(
     let instance = instance_provider.get_instance(instance_name).await?;
 
     Ok(serde_json::to_string(&instance.to_json().await?)
-        .map_err(|_| EpsilonError::ParseJsonError("Get Instance".tostring()))?)
+        .map_err(|_| EpsilonError::ParseJsonError("Get Instance".to_owned()))?
+    )
 }
 
 #[rocket::get("/get_all")]
