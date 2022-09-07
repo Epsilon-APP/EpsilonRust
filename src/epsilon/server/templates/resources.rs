@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct ResourcesInfo {
-    pub cpu: u8,
+    pub cpu: f32,
     pub ram: u32,
 }
 
