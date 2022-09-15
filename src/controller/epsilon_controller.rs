@@ -247,7 +247,7 @@ impl EpsilonController {
                             )
                             .await?;
 
-                        debug!("Patch status ({}) : {}", instancen_name, json!({ "status": new_status }));
+                        debug!("Patch status ({}) : {}", instance_name, json!({ "status": new_status }));
 
                         let state = &new_status.state;
                         let close = &new_status.close;
