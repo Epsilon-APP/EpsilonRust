@@ -59,7 +59,7 @@ impl EpsilonController {
                 .run(Self::reconcile, Self::on_error, clone_context)
                 .for_each(|res| async move {
                     match res {
-                        Ok(_) => debug!("Sync successful"),
+                        Ok(_) => {},
                         Err(e) => {
                             if let ObjectNotFound(_) = e {
                             } else {
@@ -247,6 +247,8 @@ impl EpsilonController {
                             )
                             .await?;
 
+                        debug!("Patch status ({}) : {}", instancen_name, json!({ "status": new_status }));
+
                         let state = &new_status.state;
                         let close = &new_status.close;
 
@@ -264,6 +266,8 @@ impl EpsilonController {
                             epsilon_instance_api
                                 .delete(&instance_name, &DeleteParams::default())
                                 .await?;
+
+                            debug!("Close instance {}", instance_name)
                         }
                     }
                 }
