@@ -16,10 +16,10 @@ pub async fn create(
     template: &str,
     content: Json<Value>,
     context: &State<Arc<Context>>,
-) -> Result<(), EpsilonError> {
+) -> Result<String, EpsilonError> {
     let instance_provider = context.get_instance_provider();
 
-    instance_provider
+    let instance = instance_provider
         .start_instance(template, Some(content.0))
         .await
         .map_err(|_| {
@@ -31,7 +31,9 @@ pub async fn create(
 
     info!("An instance has been created (template={})", template);
 
-    Ok(())
+    Ok(serde_json::to_string(&instance.to_json().await?)
+        .map_err(|_| EpsilonError::ParseJsonError("Create Instance".to_owned()))?
+    )
 }
 
 #[rocket::post("/close/<instance>")]
