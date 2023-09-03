@@ -32,7 +32,7 @@ pub async fn create(
     info!("An instance has been created (template={})", template);
     debug!(
         "Create {}",
-        serde_json::to_string(&instance.to_json().await?)
+        serde_json::to_string(&instance.to_json().await?)?
     );
 
     Ok(serde_json::to_string(&instance.to_json().await?)
