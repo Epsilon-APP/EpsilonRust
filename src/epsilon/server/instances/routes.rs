@@ -29,14 +29,13 @@ pub async fn create(
             ))
         })?;
 
-    info!("An instance has been created (template={})", template);
-    debug!(
-        "Create {}",
-        serde_json::to_string(&instance.to_json().await?)?
-    );
+    let result = serde_json::to_string(&instance.to_json().await?)
+        .map_err(|_| EpsilonError::ParseJsonError("Create Instance".to_owned()))?;
 
-    Ok(serde_json::to_string(&instance.to_json().await?)
-        .map_err(|_| EpsilonError::ParseJsonError("Create Instance".to_owned()))?)
+    info!("An instance has been created (template={})", template);
+    debug!("Create {}", result);
+
+    Ok(result)
 }
 
 #[rocket::post("/close/<instance>")]
