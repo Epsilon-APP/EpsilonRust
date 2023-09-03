@@ -29,11 +29,10 @@ pub async fn create(
             ))
         })?;
 
-    let result = serde_json::to_string(&instance.to_json().await?)
-        .map_err(|_| EpsilonError::ParseJsonError("Create Instance".to_owned()))?;
+    let result = serde_json::to_string(&instance.to_json().await?).unwrap();
 
     info!("An instance has been created (template={})", template);
-    debug!("Create {}", result);
+    info!("Create {}", result);
 
     Ok(result)
 }
