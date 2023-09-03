@@ -30,10 +30,13 @@ pub async fn create(
         })?;
 
     info!("An instance has been created (template={})", template);
+    debug!(
+        "Create {}",
+        serde_json::to_string(&instance.to_json().await?)
+    );
 
     Ok(serde_json::to_string(&instance.to_json().await?)
-        .map_err(|_| EpsilonError::ParseJsonError("Create Instance".to_owned()))?
-    )
+        .map_err(|_| EpsilonError::ParseJsonError("Create Instance".to_owned()))?)
 }
 
 #[rocket::post("/close/<instance>")]
@@ -77,8 +80,7 @@ pub async fn get(
     let instance = instance_provider.get_instance(instance_name).await?;
 
     Ok(serde_json::to_string(&instance.to_json().await?)
-        .map_err(|_| EpsilonError::ParseJsonError("Get Instance".to_owned()))?
-    )
+        .map_err(|_| EpsilonError::ParseJsonError("Get Instance".to_owned()))?)
 }
 
 #[rocket::get("/get_all")]
