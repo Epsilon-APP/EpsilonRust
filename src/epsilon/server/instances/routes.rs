@@ -27,9 +27,10 @@ pub async fn create(
                 "Failed to create an instance from template ({})",
                 template
             ))
-        })?;
+        })
+        .unwrap();
 
-    let result = serde_json::to_string(&instance.to_json().await?).unwrap();
+    let result = serde_json::to_string(&instance.to_json().await.unwrap()).unwrap();
 
     info!("An instance has been created (template={})", template);
     info!("Create {}", result);
