@@ -56,7 +56,7 @@ async fn main() -> EResult<()> {
 
     std::env::set_var(
         "RUST_LOG",
-        "error,warn,info,debug,trace",
+        "epsilon=error, epsilon=warn, epsilon=info, epsilon=debug, epsilon=trace, rocket=info, rocket=error",
     );
 
     env_logger::Builder::new()

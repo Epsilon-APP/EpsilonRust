@@ -6,7 +6,6 @@ use serde_json::Value;
 
 use crate::controller::definitions::epsilon_instance::InstanceJson;
 use crate::epsilon::epsilon_error::EpsilonError;
-use crate::epsilon::server::instances::common::instance_type::InstanceType;
 use crate::Context;
 
 use rocket::serde::json::Json;
@@ -19,29 +18,19 @@ pub async fn create(
 ) -> Result<String, EpsilonError> {
     let instance_provider = context.get_instance_provider();
 
-    debug!("Test1");
-
     let instance = instance_provider
         .start_instance(template, Some(content.0))
         .await
         .map_err(|_| {
-            debug!("Test2");
-
             EpsilonError::ApiServerError(format!(
                 "Failed to create an instance from template ({})",
                 template
             ))
-        })
-        .unwrap();
-
-    debug!("Test3");
-
-    let result = serde_json::to_string(&instance.to_json().await.unwrap()).unwrap();
+        })?;
 
     info!("An instance has been created (template={})", template);
-    info!("Create {}", result);
 
-    Ok(result)
+    Ok(instance.get_name())
 }
 
 #[rocket::post("/close/<instance>")]
