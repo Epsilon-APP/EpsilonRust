@@ -19,16 +19,22 @@ pub async fn create(
 ) -> Result<String, EpsilonError> {
     let instance_provider = context.get_instance_provider();
 
+    debug!("Test1");
+
     let instance = instance_provider
         .start_instance(template, Some(content.0))
         .await
         .map_err(|_| {
+            debug!("Test2");
+
             EpsilonError::ApiServerError(format!(
                 "Failed to create an instance from template ({})",
                 template
             ))
         })
         .unwrap();
+
+    debug!("Test3");
 
     let result = serde_json::to_string(&instance.to_json().await.unwrap()).unwrap();
 
